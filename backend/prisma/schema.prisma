@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model Script {
+  id          String   @id @default(cuid())
+  userId      String
+  animeId     Int
+  animeTitle  String
+  contentType String
+  duration    Int
+  tone        String
+  language    String   @default("es")
+  title       String
+  hook        String
+  narration   String
+  cta         String
+  hashtags    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([userId, createdAt])
+}

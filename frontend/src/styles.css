@@ -1,0 +1,168 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Paleta de AnimeTok (oscura, acento violeta/cian). Se usa como bg-ink, text-violet-soft, border-line, etc. */
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #090b12;
+  --color-panel: #111521;
+  --color-panel-2: #161b2a;
+  --color-line: #242b3b;
+  --color-line-strong: #343c50;
+  --color-muted: #8a93a8;
+  --color-subtle: #5f6880;
+  --color-violet: #8b5cf6;
+  --color-violet-soft: #c4b5fd;
+  --color-violet-deep: #2a2142;
+  --color-cyan: #22d3ee;
+  --color-mint: #34d399;
+  --color-amber: #f6c96d;
+  --color-danger: #ffb4c0;
+}
+
+/* Variables que esperan los componentes de shadcn / Magic UI / Aceternity */
+:root {
+  --background: #090b12;
+  --foreground: #e9eaf2;
+  --card: #111521;
+  --card-foreground: #e9eaf2;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --muted: #161b2a;
+  --muted-foreground: #8a93a8;
+  --border: #242b3b;
+  --input: #242b3b;
+  --ring: #8b5cf6;
+  --radius: 0.875rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --animate-shiny-text: shiny-text 8s infinite;
+  @keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+    }
+  15%, 35% {
+    transform: translateZ(0) rotate(90deg);
+    }
+  65%, 85% {
+    transform: translateZ(0) rotate(270deg);
+    }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+    }
+  }
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+    }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+    }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes shiny-text {
+  0%, 90%, 100% {
+    background-position: calc(-100% - var(--shiny-width)) 0;
+    }
+  30%, 60% {
+    background-position: calc(100% + var(--shiny-width)) 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply min-w-[320px] bg-ink font-sans text-foreground antialiased;
+    background-image: radial-gradient(ellipse at 80% -10%, #1b1733 0, transparent 45%);
+    background-attachment: fixed;
+  }
+  * {
+    @apply border-border;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* iOS hace zoom en inputs con letra < 16px: lo evitamos en móvil */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  @media (min-width: 1024px) {
+    input,
+    select,
+    textarea {
+      font-size: 14px;
+    }
+  }
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  select optgroup {
+    color: #a78bfa;
+    background: #111521;
+  }
+  select option {
+    color: #e9eaf2;
+    background: #111521;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+@utility text-gradient {
+  background: linear-gradient(90deg, #a78bfa, #67d9e8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
