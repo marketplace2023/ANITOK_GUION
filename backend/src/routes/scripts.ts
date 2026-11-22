@@ -69,7 +69,11 @@ router.post("/generate", async (req, res) => {
 
   try {
     const d = parsed.data;
-    const trends = await getAnimeTrends(d.anime.id).catch((e) => { console.warn("Tendencias no disponibles:", e?.message); return null; });
+    // Máx. 6 s para tendencias: el resto del presupuesto (límite de 60 s en Netlify) es para la IA.
+    const trends = await Promise.race([
+      getAnimeTrends(d.anime.id),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+    ]).catch((e) => { console.warn("Tendencias no disponibles:", e?.message); return null; });
     const words = Math.round(d.targetChars / 6);
     const seconds = Math.round(d.targetChars / 15);
     const sceneCount = Math.max(2, Math.round(d.targetChars / 200));

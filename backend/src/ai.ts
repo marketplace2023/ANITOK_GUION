@@ -27,17 +27,17 @@ function attempts(): Attempt[] {
   return out;
 }
 
-async function callGemini(model: string, prompt: string): Promise<string> {
+async function callGemini(model: string, prompt: string, timeoutMs: number): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY! });
   const response = await ai.models.generateContent({
     model,
     contents: prompt,
-    config: { responseMimeType: "application/json", temperature: 0.85, abortSignal: AbortSignal.timeout(config.GEMINI_TIMEOUT_MS) },
+    config: { responseMimeType: "application/json", temperature: 0.85, abortSignal: AbortSignal.timeout(timeoutMs) },
   });
   return response.text?.trim() ?? "";
 }
 
-async function callOpenRouter(model: string, prompt: string): Promise<string> {
+async function callOpenRouter(model: string, prompt: string, timeoutMs: number): Promise<string> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -51,7 +51,7 @@ async function callOpenRouter(model: string, prompt: string): Promise<string> {
       response_format: { type: "json_object" },
       temperature: 0.85,
     }),
-    signal: AbortSignal.timeout(config.GEMINI_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   const json = (await res.json().catch(() => ({}))) as { error?: { message?: string }; choices?: { message?: { content?: string } }[] };
   if (!res.ok || json.error) throw new Error(`OpenRouter ${res.status}: ${json.error?.message ?? "error desconocido"}`);
@@ -67,10 +67,15 @@ function parseJson(raw: string): unknown {
 export async function generateJson(prompt: string): Promise<JsonResult> {
   const chain = attempts();
   if (!chain.length) throw new Error("No hay ningún proveedor de IA configurado.");
-  let lastError: unknown;
+  // Presupuesto total: Netlify corta las funciones a los 60 s, así que nunca lo superamos.
+  const deadline = Date.now() + config.AI_TOTAL_TIMEOUT_MS;
+  let lastError: unknown = new Error("Tiempo agotado antes de probar ningún modelo.");
   for (const { provider, model } of chain) {
+    const remaining = deadline - Date.now();
+    if (remaining < 4000) break;
+    const timeoutMs = Math.min(config.GEMINI_TIMEOUT_MS, remaining - 1000);
     try {
-      const raw = provider === "gemini" ? await callGemini(model, prompt) : await callOpenRouter(model, prompt);
+      const raw = provider === "gemini" ? await callGemini(model, prompt, timeoutMs) : await callOpenRouter(model, prompt, timeoutMs);
       if (!raw) throw new Error("respuesta vacía");
       return { data: parseJson(raw), provider, model };
     } catch (error) {

@@ -1,0 +1,24 @@
+# Despliegue en Netlify: frontend estático + backend Express como Netlify Function.
+[build]
+  command = "npm run build -w frontend"
+  publish = "frontend/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# API: /api/* → función "api" (mismo dominio, sin CORS)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# SPA: cualquier otra ruta sirve la app de React
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

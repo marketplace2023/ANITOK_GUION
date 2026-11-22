@@ -1,5 +1,6 @@
 import type { Anime, AnimeTrends, GenerateResponse } from "./types";
-const API = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+// En desarrollo el backend corre en :4000; publicado (Netlify) la API está en el mismo dominio.
+const API = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:4000/api" : "/api");
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API}${url}`, { ...init, headers: { "Content-Type": "application/json", ...init?.headers } });
   const data = await res.json();

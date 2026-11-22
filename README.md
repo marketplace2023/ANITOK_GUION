@@ -25,6 +25,15 @@ Aplicación web (pensada primero para móvil e instalable como PWA) para explora
 
 Tras cambiar `backend/.env`, reinicia `npm run dev` (el modo watch no vuelve a leer el `.env`).
 
+## Despliegue en Netlify
+El repositorio incluye `netlify.toml`: el frontend se publica como sitio estático y todo el backend Express corre como una Netlify Function (`netlify/functions/api.ts`) en `/api/*`, en el mismo dominio.
+
+1. Netlify → **Add new project → Import an existing project → GitHub** y elige este repositorio. La configuración de build se lee de `netlify.toml`.
+2. En **Site configuration → Environment variables** añade al menos `GEMINI_API_KEY` y, opcionalmente, `OPENROUTER_API_KEY` (y el resto de variables de `backend/.env.example` si quieres cambiar sus valores). No definas `VITE_API_URL`.
+3. Despliega. Comprueba `https://TU-SITIO.netlify.app/api/health`.
+
+Las funciones de Netlify cortan a los 60 s: por eso la cadena de modelos tiene un presupuesto total (`AI_TOTAL_TIMEOUT_MS`, 50 s por defecto).
+
 ## Variables
 - `GEMINI_API_KEY` / `OPENROUTER_API_KEY`: nunca deben incluirse en el frontend ni en variables `VITE_`.
 - `GEMINI_MODEL` y `GEMINI_FALLBACK_MODELS`: modelos de Gemini en orden de preferencia.
