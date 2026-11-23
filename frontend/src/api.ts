@@ -47,4 +47,4 @@ export const getNews = (lang: "es" | "en" | "all" = "all", q?: string, limit?: n
 
 // Generación y estado
 export const generateScript = (payload: unknown) => request<GenerateResponse>("/scripts/generate", { method: "POST", body: JSON.stringify(payload) });
-export const getHealth = () => request<{ status: string; auth: string; providers?: { gemini: boolean; openrouter: boolean } }>("/health");
+export const getHealth = () => request<{ status: string; auth: string; providers?: { gemini: boolean; nvidia: boolean; openrouter: boolean } }>("/health");

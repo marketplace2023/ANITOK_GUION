@@ -381,7 +381,7 @@ export default function Generator() {
             ) : result && response ? (
               <div className="mt-3">
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-violet-deep px-2 py-1 text-[10px] font-bold tracking-wider text-violet-soft">
-                  <RiSparkling2Fill /> {response.provider === "openrouter" ? "OPENROUTER" : "GEMINI"} · {response.model}
+                  <RiSparkling2Fill /> {response.provider.toUpperCase()} · {response.model}
                 </span>
                 <h3 className="mt-3 font-display text-xl font-semibold leading-snug">{result.title}</h3>
 

@@ -10,6 +10,10 @@ const schema = z.object({
   GEMINI_FALLBACK_MODELS: z.string().default("gemini-3.6-flash,gemini-3.1-flash-lite"),
   GEMINI_TIMEOUT_MS: z.coerce.number().default(30000),
   AI_TOTAL_TIMEOUT_MS: z.coerce.number().default(50000),
+  NVIDIA_API_KEY: z.string().optional().transform((v) => v || undefined),
+  NVIDIA_MODEL: z.string().default("nvidia/nemotron-3.5-bolt-e4b"),
+  NVIDIA_GEMMA_API_KEY: z.string().optional().transform((v) => v || undefined),
+  NVIDIA_GEMMA_MODEL: z.string().default("google/gemma-4-31b-it"),
   OPENROUTER_API_KEY: z.string().optional().transform((v) => v || undefined),
   OPENROUTER_MODELS: z.string().default("google/gemma-4-31b-it:free,nvidia/nemotron-3.5-super-vl:free,openrouter/free"),
   // Login de un solo usuario. Genera los valores con: npm run set-password -w backend

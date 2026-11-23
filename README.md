@@ -7,17 +7,17 @@ Aplicación web (pensada primero para móvil e instalable como PWA) para explora
 - UI: componentes de [Magic UI](https://magicui.design) y [Aceternity UI](https://ui.aceternity.com) (instalados con el CLI de shadcn en `frontend/src/components/ui`) e iconos de `react-icons`.
 - Backend: Node.js, Express, TypeScript, Zod, Helmet, rate limiting.
 - Anime y tendencias: AniList GraphQL (API pública, sin clave).
-- IA: Google Gemini (`@google/genai`) con respaldo automático en modelos gratuitos de OpenRouter.
+- IA: Google Gemini (`@google/genai`) con respaldo automático en NVIDIA Build (Nemotron y Gemma 4) y modelos gratuitos de OpenRouter.
 - Persistencia preparada: PostgreSQL + Prisma (esquema incluido).
 
 ## Requisitos
 - Node.js 20+
-- Una clave de Google AI Studio y/o una clave de OpenRouter.
+- Al menos una clave de Google AI Studio, NVIDIA Build u OpenRouter.
 - PostgreSQL si quieres habilitar persistencia.
 
 ## Inicio rápido
 1. Copia `backend/.env.example` a `backend/.env`.
-2. Añade `GEMINI_API_KEY` y, opcionalmente, `OPENROUTER_API_KEY` (respaldo cuando se agota la cuota de Gemini).
+2. Configura al menos una clave: `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `NVIDIA_GEMMA_API_KEY` u `OPENROUTER_API_KEY`. La cadena prueba Gemini → NVIDIA Nemotron → NVIDIA Gemma → OpenRouter, omitiendo proveedores sin clave.
 3. Crea tu usuario y contraseña: `npm run set-password -w backend` (guarda solo el hash en `backend/.env`).
 4. Ejecuta `npm install`.
 5. Ejecuta `npm run dev`.
@@ -29,15 +29,18 @@ Tras cambiar `backend/.env`, reinicia `npm run dev` (el modo watch no vuelve a l
 El repositorio incluye `netlify.toml`: el frontend se publica como sitio estático y todo el backend Express corre como una Netlify Function (`netlify/functions/api.ts`) en `/api/*`, en el mismo dominio.
 
 1. Netlify → **Add new project → Import an existing project → GitHub** y elige este repositorio. La configuración de build se lee de `netlify.toml`.
-2. En **Site configuration → Environment variables** añade `APP_USER`, `APP_PASSWORD_HASH` y `AUTH_SECRET` (los imprime `npm run set-password -w backend`), `GEMINI_API_KEY` y, opcionalmente, `OPENROUTER_API_KEY` (y el resto de variables de `backend/.env.example` si quieres cambiar sus valores). No definas `VITE_API_URL`.
+2. En **Site configuration → Environment variables** añade `APP_USER`, `APP_PASSWORD_HASH` y `AUTH_SECRET` (los imprime `npm run set-password -w backend`) y las claves de los proveedores elegidos: `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `NVIDIA_GEMMA_API_KEY` y/o `OPENROUTER_API_KEY` (y el resto de variables de `backend/.env.example` si quieres cambiar sus valores). No definas `VITE_API_URL`.
 3. Despliega. Comprueba `https://TU-SITIO.netlify.app/api/health`.
 
 Las funciones de Netlify cortan a los 60 s: por eso la cadena de modelos tiene un presupuesto total (`AI_TOTAL_TIMEOUT_MS`, 50 s por defecto).
 
 ## Variables
-- `GEMINI_API_KEY` / `OPENROUTER_API_KEY`: nunca deben incluirse en el frontend ni en variables `VITE_`.
+- `GEMINI_API_KEY` / `NVIDIA_API_KEY` / `NVIDIA_GEMMA_API_KEY` / `OPENROUTER_API_KEY`: nunca deben incluirse en el frontend ni en variables `VITE_`.
 - `GEMINI_MODEL` y `GEMINI_FALLBACK_MODELS`: modelos de Gemini en orden de preferencia.
-- `OPENROUTER_MODELS`: modelos de OpenRouter que se prueban si fallan todos los de Gemini.
+- `NVIDIA_MODEL`: modelo de NVIDIA Build (por defecto `nvidia/nemotron-3.5-bolt-e4b`), después de Gemini. Usa JSON sin streaming y sin razonamiento para reducir la latencia.
+- `NVIDIA_GEMMA_MODEL`: modelo de Gemma en NVIDIA Build (por defecto `google/gemma-4-31b-it`). Usa su propia clave `NVIDIA_GEMMA_API_KEY` y se prueba después de Nemotron, incluso si es el único proveedor configurado.
+- `OPENROUTER_MODELS`: modelos de OpenRouter que se prueban si fallan Gemini y NVIDIA.
+- `AI_TOTAL_TIMEOUT_MS`: presupuesto compartido de toda la cadena; si se agota, no se prueban los modelos restantes.
 - `GEMINI_TIMEOUT_MS`: tiempo máximo por intento antes de pasar al siguiente modelo.
 - `CLIENT_ORIGIN`: origen exacto del frontend en producción.
 

@@ -39,7 +39,7 @@ function Card({ icon: Icon, title, text, state, stateText, link }: {
 
 export default function Settings() {
   const { state, logout } = useAuth();
-  const [providers, setProviders] = useState<{ gemini: boolean; openrouter: boolean } | null>(null);
+  const [providers, setProviders] = useState<{ gemini: boolean; nvidia: boolean; openrouter: boolean } | null>(null);
   const [offline, setOffline] = useState(false);
   useEffect(() => { getHealth().then((h) => setProviders(h.providers ?? null)).catch(() => setOffline(true)); }, []);
   const st = (on?: boolean): State => (offline ? "pending" : providers ? (on ? "ok" : "pending") : "loading");
@@ -74,7 +74,8 @@ export default function Settings() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {[
           <Card key="g" icon={RiBrainLine} title="Google Gemini" text="Proveedor principal para generar guiones." state={st(providers?.gemini)} stateText={label(providers?.gemini, "GEMINI_API_KEY")} link={{ href: "https://aistudio.google.com/", label: "Abrir AI Studio" }} />,
-          <Card key="o" icon={RiRobot2Line} title="OpenRouter" text="Respaldo con modelos gratuitos si se agota la cuota de Gemini." state={st(providers?.openrouter)} stateText={label(providers?.openrouter, "OPENROUTER_API_KEY")} link={{ href: "https://openrouter.ai/keys", label: "Gestionar claves" }} />,
+          <Card key="nv" icon={RiRobot2Line} title="NVIDIA Build" text="Respaldo con Nemotron y Gemma 4, según las claves configuradas." state={st(providers?.nvidia)} stateText={label(providers?.nvidia, "NVIDIA_API_KEY o NVIDIA_GEMMA_API_KEY")} link={{ href: "https://build.nvidia.com", label: "Abrir NVIDIA Build" }} />,
+          <Card key="o" icon={RiRobot2Line} title="OpenRouter" text="Respaldo con modelos gratuitos si fallan Gemini y NVIDIA." state={st(providers?.openrouter)} stateText={label(providers?.openrouter, "OPENROUTER_API_KEY")} link={{ href: "https://openrouter.ai/keys", label: "Gestionar claves" }} />,
           <Card key="a" icon={RiDatabase2Line} title="AniList GraphQL" text="Catálogo, fichas y datos de tendencia." state="ok" stateText="API pública, sin clave" link={{ href: "https://docs.anilist.co/", label: "Documentación" }} />,
           <Card key="n" icon={RiNewspaperLine} title="Noticias" text="Crunchyroll Noticias y Ramen Para Dos (español), Anime News Network y MyAnimeList (inglés)." state="ok" stateText="RSS públicos, sin clave" />,
           <Card key="s" icon={RiShieldCheckLine} title="Seguridad" text="Login privado con contraseña cifrada (scrypt), sesión en cookie segura, límite de intentos, Helmet y validación Zod." state="ok" stateText="Protecciones activas" />,

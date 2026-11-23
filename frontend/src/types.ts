@@ -19,7 +19,7 @@ export type AnimeTrends = {
   momentum: "explosivo" | "en alza" | "estable" | "en baja";
 };
 export type GenerateResponse = {
-  script: GeneratedScript; model: string; provider: "gemini" | "openrouter";
+  script: GeneratedScript; model: string; provider: "gemini" | "nvidia" | "openrouter";
   stats: { narrationChars: number; targetChars: number };
   trends: AnimeTrends | null;
   newsUsed?: number;
