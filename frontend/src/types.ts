@@ -22,4 +22,15 @@ export type GenerateResponse = {
   script: GeneratedScript; model: string; provider: "gemini" | "openrouter";
   stats: { narrationChars: number; targetChars: number };
   trends: AnimeTrends | null;
+  newsUsed?: number;
+};
+export type NewsItem = {
+  id: string; title: string; summary: string; link: string; image: string | null;
+  date: string; source: string; lang: "es" | "en";
+};
+export type BrowseFilters = {
+  q?: string; genre?: string; year?: number; season?: "WINTER" | "SPRING" | "SUMMER" | "FALL";
+  format?: "TV" | "TV_SHORT" | "MOVIE" | "OVA" | "ONA" | "SPECIAL";
+  status?: "RELEASING" | "FINISHED" | "NOT_YET_RELEASED";
+  sort?: "TRENDING_DESC" | "POPULARITY_DESC" | "SCORE_DESC" | "START_DATE_DESC" | "SEARCH_MATCH";
 };

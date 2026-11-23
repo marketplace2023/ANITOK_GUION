@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
-  RiArrowDownLine, RiArrowUpLine, RiCalendarEventLine, RiCheckLine, RiCompass3Line, RiDownload2Line, RiExternalLinkLine,
-  RiFileCopyLine, RiFireFill, RiHashtag, RiLineChartLine, RiMagicLine, RiSearchLine, RiShareForwardLine, RiSparkling2Fill,
+  RiArrowDownLine, RiArrowUpLine, RiCalendarEventLine, RiCheckLine, RiCloseLine, RiDownload2Line, RiExternalLinkLine,
+  RiFileCopyLine, RiFireFill, RiGenderlessLine, RiHashtag, RiLineChartLine, RiMagicLine, RiMenLine, RiNewspaperLine,
+  RiSearchLine, RiShareForwardLine, RiSparkling2Fill, RiUserVoiceLine, RiWomenLine,
 } from "react-icons/ri";
 import { generateScript, getAnimeTrends } from "../api";
-import type { Anime, AnimeTrends, GenerateResponse } from "../types";
+import type { Anime, AnimeTrends, GenerateResponse, NewsItem } from "../types";
 import PageHeader from "../components/PageHeader";
+import AnimePicker from "../components/AnimePicker";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { NumberTicker } from "@/components/ui/number-ticker";
@@ -20,7 +22,26 @@ const typeGroups: [string, [string, string][]][] = [
   ["Entretener", [["ranking", "Rankings y tops"], ["top_moments", "Mejores momentos"], ["versus", "Versus: ¿quién ganaría?"], ["comparison", "Comparaciones"], ["emotional", "Historias emotivas"]]],
   ["Actualidad", [["news", "Novedades"], ["episode_reaction", "Reacción al último episodio"]]],
 ];
-const tones = [["energetic", "Enérgico y viral"], ["dramatic", "Dramático y cinematográfico"], ["epic", "Épico (voz de tráiler)"], ["mysterious", "Misterioso y de suspense"], ["informative", "Informativo y analítico"], ["conversational", "Cercano, como con un amigo"], ["fan", "Fan apasionado (hype otaku)"], ["humorous", "Humorístico"], ["sarcastic", "Sarcástico e irónico"], ["nostalgic", "Nostálgico"], ["inspirational", "Inspirador y motivacional"], ["calm", "Relajado y reflexivo"], ["controversial", "Polémico (sin desinformar)"]];
+const toneGroups: [string, [string, string][]][] = [
+  ["Energía", [["energetic", "Enérgico y viral"], ["hype", "Hype de estreno"], ["fan", "Fan apasionado (hype otaku)"], ["epic", "Épico (voz de tráiler)"]]],
+  ["Emoción", [["dramatic", "Dramático y cinematográfico"], ["emotional_deep", "Emotivo y profundo"], ["romantic", "Romántico y soñador"], ["cute", "Tierno y kawaii"], ["nostalgic", "Nostálgico"], ["inspirational", "Inspirador y motivacional"]]],
+  ["Humor", [["humorous", "Humorístico"], ["genz", "Memes y humor Gen Z"], ["sarcastic", "Sarcástico e irónico"], ["gossip", "Chismoso (salseo)"]]],
+  ["Atmósfera", [["mysterious", "Misterioso y de suspense"], ["creepy", "Oscuro y escalofriante"], ["poetic", "Poético y lírico"], ["calm", "Relajado y reflexivo"]]],
+  ["Análisis", [["informative", "Informativo y analítico"], ["teacher", "Didáctico (como un profe)"], ["documentary", "Narrador de documental"], ["critic", "Crítico exigente"], ["controversial", "Polémico (sin desinformar)"]]],
+  ["Cercanía", [["conversational", "Cercano, como con un amigo"], ["gamer", "Gamer / streamer"]]],
+];
+const genders: [string, string, typeof RiWomenLine][] = [["female", "Femenina", RiWomenLine], ["male", "Masculina", RiMenLine], ["neutral", "Neutra", RiGenderlessLine]];
+const ages = [["young", "Joven", "18-24"], ["adult", "Adulta", "25-35"], ["mature", "Madura", "35+"]];
+const dialects = [["latam", "Latino neutro"], ["mexico", "México"], ["spain", "España"], ["argentina", "Argentina (voseo)"], ["colombia", "Colombia"], ["chile", "Chile"], ["peru", "Perú"]];
+const audiences = [["general", "Público general"], ["girls", "Para chicas"], ["boys", "Para chicos"], ["otaku", "Otakus veteranos"], ["newbies", "Principiantes en anime"]];
+const narrativeStyles = [["narrator", "Narrador (tercera persona)"], ["first_person", "Primera persona: fan contando"], ["pov", "POV: metiendo al espectador"], ["direct", "Hablando directo a cámara"], ["list", "Lista rápida numerada"], ["story_twist", "Mini-historia con giro final"], ["dialogue", "Diálogo entre dos voces"]];
+
+// Preferencias de voz y formato: se recuerdan en este dispositivo
+type Prefs = { tone: string; targetChars: number; gender: string; age: string; dialect: string; audience: string; style: string };
+const DEFAULT_PREFS: Prefs = { tone: "energetic", targetChars: 900, gender: "neutral", age: "adult", dialect: "latam", audience: "general", style: "narrator" };
+function loadPrefs(): Prefs {
+  try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem("generator-prefs") || "{}") }; } catch { return DEFAULT_PREFS; }
+}
 const lengths = [300, 600, 900, 1200, 1500];
 const spoilerOptions = [["none", "Sin spoilers"], ["light", "Leves"], ["full", "Completos"]];
 const CREATIVE_CENTER = "https://ads.tiktok.com/business/creativecenter/inspiration/popular/hashtag/pc/es";
@@ -115,11 +136,27 @@ function Section({ n, title, action, children }: { n?: string; title: string; ac
 
 export default function Generator() {
   const location = useLocation();
-  const anime = (location.state as { anime?: Anime } | null)?.anime;
-  const [type, setType] = useState("general");
-  const [targetChars, setTargetChars] = useState(900);
-  const [tone, setTone] = useState("energetic");
+  const navState = location.state as { anime?: Anime; news?: NewsItem } | null;
+  const [anime, setAnime] = useState<Anime | undefined>(navState?.anime);
+  const [picking, setPicking] = useState(false);
+  const [news, setNews] = useState<NewsItem | undefined>(navState?.news);
+  const [type, setType] = useState(navState?.news ? "news" : "general");
+  const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
+  const { tone, targetChars } = prefs;
+  const setPref = (patch: Partial<Prefs>) => setPrefs((p) => {
+    const next = { ...p, ...patch };
+    try { localStorage.setItem("generator-prefs", JSON.stringify(next)); } catch { /* sin almacenamiento */ }
+    return next;
+  });
+  const setTone = (v: string) => setPref({ tone: v });
+  const setTargetChars = (v: number) => setPref({ targetChars: v });
   const [spoilers, setSpoilers] = useState("none");
+
+  // Si llegan anime o noticia nuevos por navegación (desde Explorar o Noticias), los aplicamos
+  useEffect(() => {
+    if (navState?.anime) { setAnime(navState.anime); setPicking(false); }
+    if (navState?.news) { setNews(navState.news); setType("news"); }
+  }, [location.key]);
   const [extra, setExtra] = useState("");
   const [response, setResponse] = useState<GenerateResponse | null>(null);
   const [busy, setBusy] = useState(false);
@@ -147,6 +184,8 @@ export default function Generator() {
       const d = await generateScript({
         anime: { id: anime.id, title, description: anime.description || "", genres: anime.genres || [], characters: anime.characters?.edges.map((e) => e.node.name.full) || [] },
         contentType: type, targetChars, tone, spoilerLevel: spoilers, language: "es", extraInstructions: extra,
+        narratorGender: prefs.gender, narratorAge: prefs.age, dialect: prefs.dialect, audience: prefs.audience, narrativeStyle: prefs.style,
+        ...(news ? { newsContext: { title: news.title, summary: news.summary, source: news.source, date: news.date } } : {}),
       });
       setResponse(d);
       if (d.trends) setTrends(d.trends);
@@ -181,8 +220,21 @@ export default function Generator() {
         {/* Formulario */}
         <BlurFade delay={0.05}>
           <section className="grid grid-cols-1 gap-5 rounded-3xl border border-line bg-panel p-4 sm:p-6">
+            {news && (
+              <div className="rounded-2xl border border-violet/30 bg-violet-deep/50 p-3">
+                <div className="flex items-start gap-3">
+                  <RiNewspaperLine className="mt-0.5 size-5 shrink-0 text-violet-soft" />
+                  <div className="min-w-0 flex-1">
+                    <small className="text-[11px] font-bold tracking-[0.14em] text-[#9c87e8]">NOTICIA BASE · {news.source}</small>
+                    <p className="mt-1 text-sm font-semibold leading-snug">{news.title}</p>
+                  </div>
+                  <button onClick={() => setNews(undefined)} aria-label="Quitar noticia" className="grid size-8 shrink-0 place-items-center rounded-lg text-muted active:bg-panel-2"><RiCloseLine className="size-5" /></button>
+                </div>
+              </div>
+            )}
+
             <Field label="ANIME">
-              {anime ? (
+              {anime && !picking ? (
                 <div>
                   <div className="flex items-center gap-3 rounded-2xl border border-[#34304c] bg-[#19182a] p-2.5">
                     <img src={anime.coverImage?.large} alt="" className="h-16 w-12 shrink-0 rounded-lg object-cover" />
@@ -190,15 +242,12 @@ export default function Generator() {
                       <b className="block truncate text-[15px]">{title}</b>
                       <small className="mt-0.5 block truncate text-xs text-muted">{anime.genres?.slice(0, 3).join(" · ")}</small>
                     </div>
-                    <Link to="/catalog" className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-violet-soft active:bg-violet-deep">Cambiar</Link>
+                    <button onClick={() => setPicking(true)} className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-violet-soft active:bg-violet-deep">Cambiar</button>
                   </div>
                   {trends ? <TrendPanel trends={trends} /> : <div className="mt-3 h-36 animate-pulse rounded-2xl bg-ink/50" />}
                 </div>
               ) : (
-                <Link to="/catalog" className="flex items-center gap-3 rounded-2xl border border-dashed border-[#45405b] p-4 text-sm text-muted active:bg-panel-2">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-deep text-violet-soft"><RiCompass3Line className="size-5" /></span>
-                  <span>Primero elige un anime en <b className="text-violet-soft">Explorar</b>.</span>
-                </Link>
+                <AnimePicker onPick={(a) => { setAnime(a); setPicking(false); setResponse(null); }} onCancel={anime ? () => setPicking(false) : undefined} />
               )}
             </Field>
 
@@ -224,9 +273,57 @@ export default function Generator() {
 
             <Field label="TONO NARRATIVO">
               <select value={tone} onChange={(e) => setTone(e.target.value)} className={selectCls}>
-                {tones.map(([v, l]) => <option value={v} key={v}>{l}</option>)}
+                {toneGroups.map(([g, opts]) => <optgroup label={g} key={g}>{opts.map(([v, l]) => <option value={v} key={v}>{l}</option>)}</optgroup>)}
               </select>
             </Field>
+
+            {/* Voz y persona: quién habla y para quién */}
+            <div className="grid gap-4 rounded-2xl border border-line bg-ink/40 p-3.5">
+              <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-[#9c87e8]">
+                <RiUserVoiceLine className="size-4" /> VOZ Y PERSONA
+              </div>
+              <p className="-mt-2 text-xs text-subtle">Quién habla y para quién. Se recuerda en este dispositivo.</p>
+              <Field label="VOZ DEL NARRADOR">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {genders.map(([v, l, Icon]) => (
+                    <button key={v} onClick={() => setPref({ gender: v })} className={cn(
+                      "flex h-12 items-center justify-center gap-1.5 rounded-xl border text-sm font-medium transition active:scale-95",
+                      prefs.gender === v ? "border-violet bg-[#30234d] text-violet-soft" : "border-line-strong bg-ink/60 text-[#9da6b8]"
+                    )}><Icon className="size-4" />{l}</button>
+                  ))}
+                </div>
+              </Field>
+              <Field label="EDAD DE LA VOZ">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {ages.map(([v, l, range]) => (
+                    <button key={v} onClick={() => setPref({ age: v })} className={cn(
+                      "flex h-12 flex-col items-center justify-center rounded-xl border transition active:scale-95",
+                      prefs.age === v ? "border-violet bg-[#30234d] text-violet-soft" : "border-line-strong bg-ink/60 text-[#9da6b8]"
+                    )}>
+                      <b className="text-sm font-semibold">{l}</b>
+                      <small className={cn("text-[10px]", prefs.age === v ? "text-[#a993e8]" : "text-subtle")}>{range}</small>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="ESPAÑOL DE">
+                  <select value={prefs.dialect} onChange={(e) => setPref({ dialect: e.target.value })} className={selectCls}>
+                    {dialects.map(([v, l]) => <option value={v} key={v}>{l}</option>)}
+                  </select>
+                </Field>
+                <Field label="PÚBLICO">
+                  <select value={prefs.audience} onChange={(e) => setPref({ audience: e.target.value })} className={selectCls}>
+                    {audiences.map(([v, l]) => <option value={v} key={v}>{l}</option>)}
+                  </select>
+                </Field>
+              </div>
+              <Field label="ESTILO DE NARRACIÓN">
+                <select value={prefs.style} onChange={(e) => setPref({ style: e.target.value })} className={selectCls}>
+                  {narrativeStyles.map(([v, l]) => <option value={v} key={v}>{l}</option>)}
+                </select>
+              </Field>
+            </div>
 
             <Field label="NIVEL DE SPOILERS">
               <div className="grid grid-cols-3 gap-1 rounded-xl border border-line-strong bg-ink/60 p-1">
@@ -250,7 +347,7 @@ export default function Generator() {
                 onClick={create}
                 disabled={busy || !anime}
                 background="linear-gradient(100deg,#8b5cf6,#6247d6)"
-                className="h-13 w-full gap-2 text-base font-semibold shadow-[0_10px_30px_-8px_#8b5cf6] disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-13 w-full gap-2 text-base font-semibold shadow-[0_10px_30px_-8px_#8b5cf6] disabled:cursor-not-allowed disabled:text-white/60 disabled:shadow-none disabled:grayscale-[0.7]"
               >
                 <RiSparkling2Fill className={cn("size-5", busy && "animate-spin")} /> {busy ? "Generando tu guion…" : "Generar guion con IA"}
               </ShimmerButton>

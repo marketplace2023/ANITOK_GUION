@@ -18,7 +18,7 @@ Aplicación web (pensada primero para móvil e instalable como PWA) para explora
 ## Inicio rápido
 1. Copia `backend/.env.example` a `backend/.env`.
 2. Añade `GEMINI_API_KEY` y, opcionalmente, `OPENROUTER_API_KEY` (respaldo cuando se agota la cuota de Gemini).
-3. Copia `frontend/.env.example` a `frontend/.env` si el backend no estará en localhost:4000.
+3. Crea tu usuario y contraseña: `npm run set-password -w backend` (guarda solo el hash en `backend/.env`).
 4. Ejecuta `npm install`.
 5. Ejecuta `npm run dev`.
 6. Frontend: http://localhost:5173 · API: http://localhost:4000/api/health
@@ -29,7 +29,7 @@ Tras cambiar `backend/.env`, reinicia `npm run dev` (el modo watch no vuelve a l
 El repositorio incluye `netlify.toml`: el frontend se publica como sitio estático y todo el backend Express corre como una Netlify Function (`netlify/functions/api.ts`) en `/api/*`, en el mismo dominio.
 
 1. Netlify → **Add new project → Import an existing project → GitHub** y elige este repositorio. La configuración de build se lee de `netlify.toml`.
-2. En **Site configuration → Environment variables** añade al menos `GEMINI_API_KEY` y, opcionalmente, `OPENROUTER_API_KEY` (y el resto de variables de `backend/.env.example` si quieres cambiar sus valores). No definas `VITE_API_URL`.
+2. En **Site configuration → Environment variables** añade `APP_USER`, `APP_PASSWORD_HASH` y `AUTH_SECRET` (los imprime `npm run set-password -w backend`), `GEMINI_API_KEY` y, opcionalmente, `OPENROUTER_API_KEY` (y el resto de variables de `backend/.env.example` si quieres cambiar sus valores). No definas `VITE_API_URL`.
 3. Despliega. Comprueba `https://TU-SITIO.netlify.app/api/health`.
 
 Las funciones de Netlify cortan a los 60 s: por eso la cadena de modelos tiene un presupuesto total (`AI_TOTAL_TIMEOUT_MS`, 50 s por defecto).
@@ -41,16 +41,23 @@ Las funciones de Netlify cortan a los 60 s: por eso la cadena de modelos tiene u
 - `GEMINI_TIMEOUT_MS`: tiempo máximo por intento antes de pasar al siguiente modelo.
 - `CLIENT_ORIGIN`: origen exacto del frontend en producción.
 
+## Login
+La app es privada para un solo usuario: toda la API (salvo `/api/health` y `/api/auth/*`) exige sesión. La contraseña se guarda como hash scrypt, la sesión es una cookie HttpOnly firmada (30 días) y el login admite 10 intentos fallidos cada 15 minutos por IP. Si falta la configuración, la API queda cerrada.
+
 ## Endpoints
-- `GET /api/health` (incluye qué proveedores de IA están configurados)
-- `GET /api/anime/search?q=naruto&page=1`
+- `GET /api/health`
+- `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me`
+- `GET /api/news?lang=es|en|all&q=` (Crunchyroll Noticias, Ramen Para Dos, Anime News Network, MyAnimeList)
+- `GET /api/anime/genres`
+- `GET /api/anime/:id/news`
+- `GET /api/anime/search?q=&genre=&year=&season=&format=&status=&sort=&page=` (el texto es opcional)
 - `GET /api/anime/trending`
 - `GET /api/anime/:id`
 - `GET /api/anime/:id/trends`
 - `POST /api/scripts/generate`
 
 ## Estado del proyecto
-Incluye navegación móvil con barra de pestañas, inicio con animes en tendencia, búsqueda en AniList, ficha de anime, panel de tendencias, generación con 19 tipos de contenido, 13 tonos y longitud por caracteres (300–1500), además de validación y protecciones HTTP básicas. La biblioteca persistente y el login todavía no están conectados: el esquema Prisma es la base para implementarlos.
+Incluye navegación móvil con barra de pestañas, inicio con animes en tendencia, búsqueda en AniList, ficha de anime, panel de tendencias, generación con 19 tipos de contenido, 25 tonos, voz del narrador (género, edad, variante del español, público y estilo de narración), longitud por caracteres (300–1500), noticias de anime y login privado, además de validación y protecciones HTTP básicas. La biblioteca persistente y el login todavía no están conectados: el esquema Prisma es la base para implementarlos.
 
 TikTok no ofrece una API pública gratuita de tendencias: las señales de tendencia vienen de AniList y el panel enlaza al TikTok Creative Center para revisar hashtags manualmente.
 

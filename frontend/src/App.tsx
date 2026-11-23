@@ -4,8 +4,11 @@ import { motion } from "motion/react";
 import type { IconType } from "react-icons";
 import {
   RiBookmark3Fill, RiBookmark3Line, RiCompass3Fill, RiCompass3Line, RiHome5Fill, RiHome5Line,
-  RiMagicFill, RiMagicLine, RiMovie2Line, RiSettings4Fill, RiSettings4Line,
+  RiMagicFill, RiMagicLine, RiMovie2Line, RiNewspaperFill, RiNewspaperLine, RiSettings4Fill, RiSettings4Line,
 } from "react-icons/ri";
+import { useAuth } from "./auth";
+import Login from "./pages/Login";
+import News from "./pages/News";
 import { cn } from "@/lib/utils";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Dashboard from "./pages/Dashboard";
@@ -14,12 +17,13 @@ import Generator from "./pages/Generator";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
 
-type NavItem = { to: string; label: string; short: string; icon: IconType; activeIcon: IconType };
+type NavItem = { to: string; label: string; short: string; icon: IconType; activeIcon: IconType; mobile?: boolean };
 const nav: NavItem[] = [
   { to: "/", label: "Inicio", short: "Inicio", icon: RiHome5Line, activeIcon: RiHome5Fill },
   { to: "/catalog", label: "Explorar anime", short: "Explorar", icon: RiCompass3Line, activeIcon: RiCompass3Fill },
   { to: "/generator", label: "Generador IA", short: "Crear", icon: RiMagicLine, activeIcon: RiMagicFill },
-  { to: "/library", label: "Mis guiones", short: "Guiones", icon: RiBookmark3Line, activeIcon: RiBookmark3Fill },
+  { to: "/news", label: "Noticias", short: "Noticias", icon: RiNewspaperLine, activeIcon: RiNewspaperFill },
+  { to: "/library", label: "Mis guiones", short: "Guiones", icon: RiBookmark3Line, activeIcon: RiBookmark3Fill, mobile: false },
   { to: "/settings", label: "Configuración", short: "Ajustes", icon: RiSettings4Line, activeIcon: RiSettings4Fill },
 ];
 
@@ -38,6 +42,19 @@ function Brand({ compact = false }: { compact?: boolean }) {
 }
 
 export default function App() {
+  const { state } = useAuth();
+  if (state.status === "loading") {
+    return (
+      <div className="grid min-h-dvh place-items-center">
+        <div className="grid size-14 animate-pulse place-items-center rounded-2xl bg-linear-to-br from-violet to-[#4c35b5]"><RiMovie2Line className="size-7 text-white" /></div>
+      </div>
+    );
+  }
+  if (state.status === "anonymous") return <Login reason={state.reason} />;
+  return <Shell />;
+}
+
+function Shell() {
   const location = useLocation();
   // Cuerpo entre llaves: en Chrome reciente scrollTo devuelve una Promise y React
   // la interpretaría como función de limpieza del efecto (rompe la navegación).
@@ -89,6 +106,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/generator" element={<Generator />} />
+            <Route path="/news" element={<News />} />
             <Route path="/library" element={<Library />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
@@ -103,7 +121,7 @@ export default function App() {
       {/* Móvil: barra de pestañas inferior */}
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line/80 bg-[#0b0e16]/90 backdrop-blur-xl lg:hidden" aria-label="Navegación principal">
         <div className="mx-auto grid h-16 max-w-md grid-cols-5 items-center px-1">
-          {nav.map((item) => {
+          {nav.filter((item) => item.mobile !== false).map((item) => {
             const active = isActive(item.to);
             const Icon = active ? item.activeIcon : item.icon;
             if (item.to === "/generator") {

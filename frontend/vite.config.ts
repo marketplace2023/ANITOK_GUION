@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
-  server: { port: 5173 },
+  // En local, /api va al backend (mismo origen que en Netlify: la cookie de sesión funciona igual)
+  server: { port: 5173, proxy: { "/api": "http://localhost:4000" } },
   preview: { port: 4173 },
 });

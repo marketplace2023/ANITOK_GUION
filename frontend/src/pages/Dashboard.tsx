@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { RiArrowRightUpLine, RiCompass3Line, RiFireFill, RiHashtag, RiMagicLine, RiSparkling2Fill, RiTiktokFill } from "react-icons/ri";
-import { getTrendingAnime } from "../api";
-import type { Anime } from "../types";
+import { RiArrowRightUpLine, RiCompass3Line, RiFireFill, RiHashtag, RiMagicLine, RiNewspaperLine, RiSparkling2Fill, RiTiktokFill } from "react-icons/ri";
+import { getNews, getTrendingAnime } from "../api";
+import type { Anime, NewsItem } from "../types";
 import AnimeCard from "../components/AnimeCard";
+import NewsCard from "../components/NewsCard";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
@@ -17,7 +18,9 @@ const titleOf = (a: Anime) => a.title.english || a.title.romaji || "Anime";
 export default function Dashboard() {
   const [trending, setTrending] = useState<Anime[]>([]);
   const [failed, setFailed] = useState(false);
+  const [news, setNews] = useState<NewsItem[] | null>(null);
   useEffect(() => { getTrendingAnime().then((d) => setTrending(d.results)).catch(() => setFailed(true)); }, []);
+  useEffect(() => { getNews("es", undefined, 3).then((d) => setNews(d.results)).catch(() => setNews([])); }, []);
 
   return (
     <div className="grid grid-cols-1 gap-7 lg:gap-9">
@@ -89,6 +92,26 @@ export default function Dashboard() {
           </div>
         )}
         {failed && <p className="mt-3 text-sm text-muted">No se pudo conectar con AniList. Revisa que el backend esté encendido.</p>}
+      </section>
+
+      {/* Últimas noticias */}
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.2em] text-[#9c87e8]"><RiNewspaperLine className="size-3.5" /> ÚLTIMAS NOTICIAS</div>
+            <h2 className="mt-1 font-display text-xl font-semibold sm:text-2xl">Lo que está pasando</h2>
+          </div>
+          <Link to="/news" className="flex shrink-0 items-center gap-1 text-sm font-medium text-violet-soft">Ver todas <RiArrowRightUpLine /></Link>
+        </div>
+        {news === null ? (
+          <div className="grid gap-3 lg:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-28 animate-pulse rounded-2xl bg-panel" />)}</div>
+        ) : news.length ? (
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {news.map((n, i) => <BlurFade key={n.id} delay={0.04 * i} inView><NewsCard item={n} /></BlurFade>)}
+          </div>
+        ) : (
+          <p className="text-sm text-muted">No se pudieron cargar las noticias ahora mismo.</p>
+        )}
       </section>
 
       {/* Accesos rápidos */}
