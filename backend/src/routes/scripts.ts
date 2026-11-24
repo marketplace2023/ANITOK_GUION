@@ -166,7 +166,7 @@ router.post("/generate", async (req, res) => {
   const parsed = inputSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Revisa los datos del guion.", details: parsed.error.flatten() });
   const status = providerStatus();
-  if (!Object.values(status).some(Boolean)) return res.status(503).json({ error: "La IA no está configurada. Añade GEMINI_API_KEY, NVIDIA_API_KEY, NVIDIA_GEMMA_API_KEY u OPENROUTER_API_KEY al backend." });
+  if (!Object.values(status).some(Boolean)) return res.status(503).json({ error: "La IA no está configurada. Añade GEMINI_API_KEY, NVIDIA_API_KEY, SENSENOVA_API_KEY, NVIDIA_GEMMA_API_KEY u OPENROUTER_API_KEY al backend." });
 
   try {
     const d = parsed.data;

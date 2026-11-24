@@ -6,7 +6,7 @@ import { config } from "./config.js";
 // - Cada servicio tiene un tiempo máximo (AI_PROVIDER_TIMEOUT_MS) para que uno colgado no agote el presupuesto total.
 // - Si un servicio está saturado (429/503) o no responde, se pausa AI_COOLDOWN_MS y pasa al final de la cola.
 
-export const PROVIDER_IDS = ["gemini", "nemotron", "gemma", "openrouter"] as const;
+export const PROVIDER_IDS = ["gemini", "nemotron", "sensenova", "gemma", "openrouter"] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 export type JsonResult = { data: unknown; provider: ProviderId; model: string };
 
@@ -15,6 +15,7 @@ const list = (s: string) => s.split(",").map((m) => m.trim()).filter(Boolean);
 const PROVIDERS: Record<ProviderId, { label: string; key: () => string | undefined; models: () => string[] }> = {
   gemini: { label: "Google Gemini", key: () => config.GEMINI_API_KEY, models: () => [config.GEMINI_MODEL, ...list(config.GEMINI_FALLBACK_MODELS)] },
   nemotron: { label: "NVIDIA Nemotron", key: () => config.NVIDIA_API_KEY, models: () => [config.NVIDIA_MODEL] },
+  sensenova: { label: "SenseNova", key: () => config.SENSENOVA_API_KEY, models: () => [config.SENSENOVA_MODEL, ...list(config.SENSENOVA_FALLBACK_MODELS)] },
   gemma: { label: "NVIDIA Gemma", key: () => config.NVIDIA_GEMMA_API_KEY, models: () => [config.NVIDIA_GEMMA_MODEL] },
   openrouter: { label: "OpenRouter (gratis)", key: () => config.OPENROUTER_API_KEY, models: () => list(config.OPENROUTER_MODELS) },
 };
@@ -61,9 +62,15 @@ async function callGemini(model: string, prompt: string, timeoutMs: number): Pro
 }
 
 async function callChatCompletion(provider: Exclude<ProviderId, "gemini">, model: string, prompt: string, timeoutMs: number): Promise<string> {
-  const isNvidia = provider !== "openrouter";
+  const isNvidia = provider === "nemotron" || provider === "gemma";
   const isGemma = provider === "gemma";
-  const res = await fetch(isNvidia ? "https://integrate.api.nvidia.com/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions", {
+  const url = {
+    nemotron: "https://integrate.api.nvidia.com/v1/chat/completions",
+    gemma: "https://integrate.api.nvidia.com/v1/chat/completions",
+    sensenova: "https://token.sensenova.ai/v1/chat/completions",
+    openrouter: "https://openrouter.ai/api/v1/chat/completions",
+  }[provider];
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${PROVIDERS[provider].key()}`,
@@ -77,6 +84,7 @@ async function callChatCompletion(provider: Exclude<ProviderId, "gemini">, model
       response_format: { type: "json_object" },
       temperature: isGemma ? 0.5 : 0.85,
       ...(isNvidia ? { stream: false, max_tokens: 4096, top_p: isGemma ? 1 : 0.95 } : {}),
+      ...(provider === "sensenova" ? { stream: false, max_tokens: 4096 } : {}),
       ...(provider === "nemotron" ? { chat_template_kwargs: { enable_thinking: false } } : {}),
     }),
     signal: AbortSignal.timeout(timeoutMs),

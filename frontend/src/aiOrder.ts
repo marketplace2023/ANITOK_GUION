@@ -3,7 +3,7 @@ import type { ProviderId } from "./types";
 // Orden de prioridad de los servicios de IA elegido en Ajustes. Se guarda en este dispositivo
 // y se envía con cada guion; si no hay ninguno guardado, manda el orden del servidor (AI_PROVIDER_ORDER).
 const KEY = "ai-provider-order";
-export const PROVIDER_IDS: ProviderId[] = ["gemini", "nemotron", "gemma", "openrouter"];
+export const PROVIDER_IDS: ProviderId[] = ["gemini", "nemotron", "sensenova", "gemma", "openrouter"];
 
 export function loadAiOrder(): ProviderId[] | null {
   try {
@@ -22,5 +22,5 @@ export function saveAiOrder(order: ProviderId[] | null) {
 }
 
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
-  gemini: "Gemini", nemotron: "NVIDIA Nemotron", gemma: "NVIDIA Gemma", openrouter: "OpenRouter",
+  gemini: "Gemini", nemotron: "NVIDIA Nemotron", sensenova: "SenseNova", gemma: "NVIDIA Gemma", openrouter: "OpenRouter",
 };

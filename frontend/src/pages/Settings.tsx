@@ -42,6 +42,7 @@ function Card({ icon: Icon, title, text, state, stateText, link }: {
 const PROVIDER_META: Record<ProviderId, { text: string; env: string; link: { href: string; label: string } }> = {
   gemini: { text: "La mejor calidad, pero a veces se satura.", env: "GEMINI_API_KEY", link: { href: "https://aistudio.google.com/", label: "AI Studio" } },
   nemotron: { text: "Muy rápido (~10 s).", env: "NVIDIA_API_KEY", link: { href: "https://build.nvidia.com", label: "NVIDIA Build" } },
+  sensenova: { text: "Buena calidad y conoce bien el anime (~10-20 s).", env: "SENSENOVA_API_KEY", link: { href: "https://token.sensenova.ai", label: "SenseNova" } },
   gemma: { text: "Buena calidad, pero lento (20-30 s).", env: "NVIDIA_GEMMA_API_KEY", link: { href: "https://build.nvidia.com", label: "NVIDIA Build" } },
   openrouter: { text: "Modelos gratuitos variados, último recurso.", env: "OPENROUTER_API_KEY", link: { href: "https://openrouter.ai/keys", label: "OpenRouter" } },
 };

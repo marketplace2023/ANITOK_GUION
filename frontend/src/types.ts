@@ -43,5 +43,5 @@ export type TraceResult = {
   episode: number | string | null; from: number; to: number; similarity: number; video: string; image: string;
 };
 
-export type ProviderId = "gemini" | "nemotron" | "gemma" | "openrouter";
+export type ProviderId = "gemini" | "nemotron" | "sensenova" | "gemma" | "openrouter";
 export type AiProviderInfo = { id: ProviderId; label: string; configured: boolean; models: string[]; pausedUntil: number | null; lastError: string | null; lastMs: number | null };
