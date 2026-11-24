@@ -16,6 +16,10 @@ const schema = z.object({
   NVIDIA_GEMMA_MODEL: z.string().default("google/gemma-4-31b-it"),
   OPENROUTER_API_KEY: z.string().optional().transform((v) => v || undefined),
   OPENROUTER_MODELS: z.string().default("google/gemma-4-31b-it:free,nvidia/nemotron-3.5-super-vl:free,openrouter/free"),
+  // Opcional: búsqueda de escenas por personaje en YouTube (https://console.cloud.google.com/apis/library/youtube.googleapis.com)
+  YOUTUBE_API_KEY: z.string().optional().transform((v) => v || undefined),
+  // ID público de un reproductor de Dailymotion Studio (cuenta gratuita). Sin él, los clips se abren en Dailymotion.
+  DAILYMOTION_PLAYER_ID: z.string().regex(/^[a-z0-9]+$/i).optional().or(z.literal("")).transform((v) => v || undefined),
   // Login de un solo usuario. Genera los valores con: npm run set-password -w backend
   APP_USER: z.string().default("admin"),
   APP_PASSWORD_HASH: z.string().optional().transform((v) => v || undefined),

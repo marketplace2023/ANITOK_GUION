@@ -8,6 +8,7 @@ import { authConfigured, authRouter, requireAuth, sessionUser } from "./auth.js"
 import animeRouter from "./routes/anime.js";
 import scriptsRouter from "./routes/scripts.js";
 import newsRouter from "./routes/news.js";
+import scenesRouter from "./routes/scenes.js";
 
 // La app Express sin listen(): la usan el servidor local (server.ts)
 // y la Netlify Function (netlify/functions/api.ts).
@@ -35,6 +36,7 @@ api.use("/auth", authRouter);
 api.use(requireAuth);
 api.use("/anime", animeRouter);
 api.use("/news", newsRouter);
+api.use("/scenes", scenesRouter);
 api.use("/scripts", scriptsRouter);
 api.use((_req, res) => res.status(404).json({ error: "Ruta de API no encontrada." }));
 

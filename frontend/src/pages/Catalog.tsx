@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
-import { RiCloseLine, RiEqualizerLine, RiFireFill, RiNewspaperLine, RiSearchLine, RiSparkling2Fill, RiStarFill } from "react-icons/ri";
+import { RiCloseLine, RiEqualizerLine, RiFilmLine, RiFireFill, RiNewspaperLine, RiSearchLine, RiSparkling2Fill, RiStarFill } from "react-icons/ri";
 import { browseAnime, getAnime, getAnimeNews, getGenres } from "../api";
 import type { Anime, BrowseFilters, NewsItem } from "../types";
 import AnimeCard from "../components/AnimeCard";
@@ -225,6 +225,9 @@ function AnimeSheet({ anime, onClose }: { anime: Anime; onClose: () => void }) {
             <ShimmerButton background="linear-gradient(100deg,#8b5cf6,#6247d6)" className="h-12 w-full gap-2 text-[15px] font-semibold">
               <RiSparkling2Fill className="size-5" /> Crear guion con este anime
             </ShimmerButton>
+          </Link>
+          <Link to={`/scenes?anime=${anime.id}`} state={{ anime }} className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line-strong text-[15px] font-semibold text-[#c6cbd8] active:bg-panel-2">
+            <RiFilmLine className="size-5" /> Ver escenas y clips
           </Link>
 
           <section className="mt-6 border-t border-line pt-5">

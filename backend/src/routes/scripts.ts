@@ -8,54 +8,78 @@ import { filterByTitles, getNews } from "../news.js";
 const router = Router();
 
 // Descripciones que recibe el modelo para cada opción del formulario.
+// TIPO DE CONTENIDO = QUÉ se cuenta (tema y estructura). No dice nada del tono.
 const CONTENT_TYPES = {
-  general: "ideas generales: el ángulo más atractivo del anime para alguien que no lo conoce",
-  curiosities: "curiosidades poco conocidas (sin inventar datos)",
-  story: "historia y resumen de la premisa",
-  ranking: "ranking o top (ej. top personajes, top momentos), con cuenta atrás",
-  theory: "teoría de fans, presentada claramente como teoría",
-  analysis: "análisis de personaje: motivaciones, evolución y por qué conecta",
-  comparison: "comparación con otro anime o entre personajes",
-  emotional: "historia emotiva centrada en sentimientos y momentos que tocan",
-  news: "novedades y actualidad: qué se ha anunciado y por qué importa",
-  top_moments: "mejores momentos y escenas épicas",
+  general: "presentación del anime: el ángulo más atractivo para alguien que no lo conoce",
+  story: "resumen de la historia y la premisa",
   recommendation: "recomendación: 'si te gustó X, mira esto' y por qué engancha",
-  lore: "lore y worldbuilding: reglas del mundo, sistema de poder, historia",
-  ending_explained: "final explicado e interpretación",
-  versus: "versus: ¿quién ganaría? argumentando cada lado",
-  hidden_details: "detalles ocultos, simbolismo y easter eggs",
-  review: "reseña rápida: ¿vale la pena verlo? pros y contras",
-  watch_order: "guía para empezar: por dónde empezar y qué esperar",
-  episode_reaction: "reacción al último episodio en emisión",
+  review: "reseña rápida: ¿vale la pena verlo? puntos fuertes y débiles",
+  watch_order: "guía para empezar: por dónde empezar, orden y qué esperar",
   underrated: "por qué este anime está infravalorado",
+  series_analysis: "análisis de la serie: temas centrales, mensaje, cómo construye a sus personajes, dirección y qué la hace especial",
+  analysis: "análisis de personaje: quién es, motivaciones, heridas, contradicciones, evolución y por qué conecta con el público",
+  relationship: "análisis de una relación entre personajes (amistad, rivalidad, familia, pareja): cómo nace, cómo cambia y qué significa",
+  villain: "análisis del antagonista: qué quiere, por qué hace lo que hace y qué lo convierte en un buen villano",
+  life_lessons: "lecciones de vida y reflexiones que deja el anime o un personaje, conectadas con la vida real del espectador",
+  lore: "lore y worldbuilding: reglas del mundo, sistema de poder, historia",
+  theory: "teoría de fans, presentada claramente como teoría",
+  hidden_details: "detalles ocultos, simbolismo y easter eggs",
+  ending_explained: "final explicado e interpretación",
+  ranking: "TOP en cuenta atrás (del último puesto al número 1), cada puesto con su motivo",
+  top_moments: "los mejores momentos y escenas del anime",
+  emotional: "los momentos más emotivos o tristes del anime y por qué duelen",
+  versus: "versus: ¿quién ganaría? argumentando cada lado",
+  comparison: "comparación con otro anime o entre personajes",
+  curiosities: "curiosidades y anécdotas: datos poco conocidos de la obra, su autor, la producción, el doblaje o la recepción (solo datos verificables; si no estás seguro, no lo incluyas)",
+  news: "novedades y actualidad: qué se ha anunciado y por qué importa",
+  episode_reaction: "reacción al último episodio en emisión",
 } as const;
 
+// TONO = CÓMO se cuenta (actitud, emoción, ritmo y vocabulario). No cambia el tema.
 const TONES = {
-  energetic: "enérgico y viral, ritmo rápido",
-  hype: "hype total de estreno, con cuenta atrás y emoción",
-  fan: "fan apasionado, puro hype otaku",
-  epic: "épico, como voz de tráiler",
-  dramatic: "dramático y cinematográfico",
-  emotional_deep: "emotivo y profundo, que haga sentir",
-  romantic: "romántico y soñador",
-  cute: "tierno y kawaii, dulce y adorable",
-  nostalgic: "nostálgico",
-  inspirational: "inspirador y motivacional",
-  humorous: "humorístico",
+  // Cálidos y humanos
+  warm: "cálido y humano: empático, cercano y sincero; habla de las emociones de los personajes como de personas reales, con frases suaves y comprensivas",
+  conversational: "cercano, como hablando con un amigo: natural, coloquial y sin pose",
+  cute: "tierno: dulce, delicado y adorable, con ternura en cada frase",
+  nostalgic: "nostálgico: evoca recuerdos y el paso del tiempo, con añoranza serena",
+  hopeful: "esperanzador: aunque hable de dolor, siempre deja una luz y un motivo para seguir",
+  romantic: "romántico y soñador: sensible, con imágenes bonitas y emoción contenida",
+  // Alegres y enérgicos
+  cheerful: "alegre y positivo: optimista, luminoso, con entusiasmo amable y sonrisa en la voz",
+  euphoric: "eufórico: emoción desbordada, como si no pudiera contenerse; muchas exclamaciones (¡…!), frases muy cortas, repeticiones enfáticas (\"¡es que no, es que NO!\"), palabras intensas (\"brutal\", \"increíble\", \"me explota la cabeza\") y ritmo explosivo",
+  charismatic: "carismático: seguro, magnético y con encanto, frases con gancho y personalidad propia que atrapa al espectador",
+  energetic: "enérgico y viral: ritmo rápido, frases cortas, cambios constantes que retienen",
+  fan: "fan apasionado: entusiasmo otaku genuino, se nota que lo ama",
+  epic: "épico, como voz de tráiler: grandilocuente, solemne y con crescendo",
+  // Profundos y reflexivos
+  philosophical: "filosófico: plantea preguntas existenciales (identidad, libertad, muerte, sentido, moral), conecta con ideas universales y deja al espectador pensando; ritmo pausado",
+  calm: "sereno y reflexivo: pausado, tranquilo, invita a pensar sin prisa",
+  melancholic: "melancólico: tristeza suave y contemplativa, belleza en lo que se pierde",
+  emotional_deep: "emotivo y profundo: va al corazón, busca que el espectador sienta",
+  poetic: "poético y lírico: metáforas, imágenes y ritmo casi musical",
+  inspirational: "inspirador y motivacional: impulsa a actuar y superarse",
+  // Fríos y serios
+  cold: "frío y distante: analítico, impasible y cortante, como un informe; frases cortas y secas terminadas en punto, cero exclamaciones, cero emojis, cero adjetivos emotivos; juzga con calma clínica y sin admiración",
+  documentary: "sobrio de documental: elegante, neutral y preciso",
+  informative: "objetivo y neutral: claro, informativo, sin opinión ni exageración",
+  solemn: "solemne y respetuoso: grave, pausado, con peso en cada palabra",
+  critic: "crítico exigente: opinión honesta, argumentada y sin miedo a señalar defectos",
+  teacher: "didáctico: explica fácil, como un buen profesor, con ejemplos claros",
+  // Intensos y oscuros
+  dramatic: "dramático y cinematográfico: tensión, pausas y frases con peso",
+  mysterious: "misterioso y de suspense: dosifica la información, deja preguntas abiertas",
+  creepy: "oscuro e inquietante: atmósfera tensa y escalofriante",
+  controversial: "provocador y polémico: opiniones fuertes que invitan a debatir, sin desinformar",
+  // Humor
+  humorous: "humorístico: chistes y comparaciones graciosas",
   genz: "humor de memes y redes (Gen Z), con remates rápidos",
   sarcastic: "sarcástico e irónico",
   gossip: "chismoso, como contando un salseo",
-  mysterious: "misterioso y de suspense, dosificando la información",
-  creepy: "oscuro y escalofriante, atmósfera inquietante",
-  informative: "informativo y analítico",
-  teacher: "didáctico, como un profe que lo explica fácil",
-  documentary: "narrador de documental, sobrio y elegante",
-  critic: "crítico exigente, opinión honesta y argumentada",
-  poetic: "poético y lírico",
-  gamer: "gamer / streamer, como comentando una partida",
-  conversational: "cercano, como hablando con un amigo",
-  calm: "relajado y reflexivo",
-  controversial: "polémico pero sin desinformar",
+} as const;
+
+const TOP_SUBJECTS = {
+  characters: "personajes", moments: "momentos", fights: "peleas", villains: "villanos", sad: "escenas tristes",
+  couples: "parejas o relaciones", powers: "poderes o técnicas", openings: "openings y endings", quotes: "frases o reflexiones",
 } as const;
 
 const NARRATOR_GENDER = {
@@ -112,6 +136,10 @@ const inputSchema = z.object({
   contentType: z.enum(keys(CONTENT_TYPES)),
   targetChars: z.number().refine((n) => LENGTHS.includes(n), "Longitud no válida"),
   tone: z.enum(keys(TONES)),
+  // Personaje en el que centrar el guion (opcional) y configuración del top
+  focusCharacter: z.string().trim().max(80).optional().default(""),
+  topCount: z.union([z.literal(3), z.literal(5), z.literal(7), z.literal(10)]).default(5),
+  topSubject: z.enum(keys(TOP_SUBJECTS)).default("characters"),
   narratorGender: z.enum(keys(NARRATOR_GENDER)).default("neutral"),
   narratorAge: z.enum(keys(NARRATOR_AGE)).default("adult"),
   dialect: z.enum(keys(DIALECTS)).default("latam"),
@@ -169,8 +197,9 @@ Idioma: ${isEs ? `español. Variante: ${DIALECTS[d.dialect]}` : "English"}.
 Anime: ${d.anime.title}. Géneros: ${d.anime.genres.join(", ")}.
 Descripción de referencia: ${d.anime.description.slice(0, 3500)}
 Personajes conocidos: ${d.anime.characters.join(", ")}.
-Formato: ${CONTENT_TYPES[d.contentType]}.
-Tono: ${TONES[d.tone]}.
+QUÉ CONTAR (tipo de contenido): ${CONTENT_TYPES[d.contentType]}.${d.contentType === "ranking" ? ` Es un TOP ${d.topCount} de ${TOP_SUBJECTS[d.topSubject]} de este anime: exactamente ${d.topCount} puestos, numerados en cuenta atrás. Cada puesto nombra un elemento CONCRETO (por su nombre: personaje, escena, técnica, canción…) con una razón específica; nada de puestos genéricos o anónimos, tampoco el número 1. Usa solo elementos que conozcas con seguridad de esta obra.` : ""}${d.focusCharacter ? `\nPERSONAJE CENTRAL: ${d.focusCharacter}. Todo el guion gira en torno a este personaje.` : d.contentType === "analysis" ? "\nPERSONAJE CENTRAL: elige al personaje más interesante de la lista para analizarlo." : ""}
+CÓMO CONTARLO (tono): ${TONES[d.tone]}.
+El tipo de contenido y el tono son independientes: el tono cambia la actitud, el vocabulario, el ritmo, la puntuación y la emoción de la voz, pero NO cambia el tema ni la estructura del tipo de contenido. El tono debe notarse con claridad desde la primera frase y mantenerse de principio a fin (hook, narración, voiceover y CTA): el mismo tema contado con otro tono tendría que sonar a otra persona. No lo suavices hacia un tono neutro.
 
 VOZ Y PERSONA (respétalo en hook, narración, voiceover y CTA):
 - ${NARRATOR_GENDER[d.narratorGender]}

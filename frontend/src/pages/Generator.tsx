@@ -16,20 +16,96 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { cn } from "@/lib/utils";
 
-const typeGroups: [string, [string, string][]][] = [
-  ["Descubrir", [["general", "Ideas generales"], ["recommendation", "Recomendaciones (si te gustó X…)"], ["review", "Reseña rápida: ¿vale la pena?"], ["watch_order", "Guía para empezar"], ["underrated", "Joya infravalorada"], ["story", "Historias y resúmenes"]]],
-  ["Profundizar", [["analysis", "Análisis de personajes"], ["lore", "Lore y worldbuilding"], ["theory", "Teorías"], ["hidden_details", "Detalles ocultos y easter eggs"], ["ending_explained", "Final explicado"], ["curiosities", "Curiosidades"]]],
-  ["Entretener", [["ranking", "Rankings y tops"], ["top_moments", "Mejores momentos"], ["versus", "Versus: ¿quién ganaría?"], ["comparison", "Comparaciones"], ["emotional", "Historias emotivas"]]],
-  ["Actualidad", [["news", "Novedades"], ["episode_reaction", "Reacción al último episodio"]]],
+// [clave, etiqueta, explicación corta]
+type Opt = [string, string, string];
+// TIPO DE CONTENIDO = QUÉ cuentas
+const typeGroups: [string, Opt[]][] = [
+  ["Descubrir", [
+    ["general", "Presentación del anime", "Lo más atractivo del anime para quien no lo conoce."],
+    ["story", "Resumen de la historia", "La premisa y de qué va, contado rápido."],
+    ["recommendation", "Recomendación (si te gustó X…)", "Por qué verlo si te gustó otro anime."],
+    ["review", "Reseña: ¿vale la pena?", "Puntos fuertes, débiles y veredicto."],
+    ["watch_order", "Guía para empezar", "Por dónde empezar y qué esperar."],
+    ["underrated", "Joya infravalorada", "Por qué merece más atención."],
+  ]],
+  ["Análisis", [
+    ["series_analysis", "Análisis de la serie", "Temas, mensaje y qué la hace especial."],
+    ["analysis", "Análisis de un personaje", "Motivaciones, heridas, evolución y por qué conecta."],
+    ["relationship", "Análisis de una relación", "Amistad, rivalidad, familia o pareja entre personajes."],
+    ["villain", "Análisis del villano", "Qué quiere y por qué funciona como antagonista."],
+    ["life_lessons", "Lecciones de vida", "Reflexiones que deja el anime o un personaje."],
+    ["ending_explained", "Final explicado", "Qué pasó al final y cómo interpretarlo."],
+  ]],
+  ["Profundizar", [
+    ["curiosities", "Curiosidades y anécdotas", "Datos poco conocidos de la obra, el autor o la producción."],
+    ["hidden_details", "Detalles ocultos y easter eggs", "Simbolismo y cosas que casi nadie vio."],
+    ["lore", "Lore y worldbuilding", "Reglas del mundo, poderes e historia."],
+    ["theory", "Teorías", "Una teoría de fans, presentada como teoría."],
+  ]],
+  ["Tops y listas", [
+    ["ranking", "Top X", "Cuenta atrás: eliges cuántos puestos y de qué."],
+    ["top_moments", "Mejores momentos", "Las escenas más memorables."],
+    ["emotional", "Momentos más tristes", "Las escenas que más duelen y por qué."],
+    ["versus", "Versus: ¿quién ganaría?", "Argumentos de cada lado."],
+    ["comparison", "Comparación", "Con otro anime o entre personajes."],
+  ]],
+  ["Actualidad", [
+    ["news", "Novedades", "Qué se ha anunciado y por qué importa."],
+    ["episode_reaction", "Reacción al último episodio", "Lo que pasó en el episodio más reciente."],
+  ]],
 ];
-const toneGroups: [string, [string, string][]][] = [
-  ["Energía", [["energetic", "Enérgico y viral"], ["hype", "Hype de estreno"], ["fan", "Fan apasionado (hype otaku)"], ["epic", "Épico (voz de tráiler)"]]],
-  ["Emoción", [["dramatic", "Dramático y cinematográfico"], ["emotional_deep", "Emotivo y profundo"], ["romantic", "Romántico y soñador"], ["cute", "Tierno y kawaii"], ["nostalgic", "Nostálgico"], ["inspirational", "Inspirador y motivacional"]]],
-  ["Humor", [["humorous", "Humorístico"], ["genz", "Memes y humor Gen Z"], ["sarcastic", "Sarcástico e irónico"], ["gossip", "Chismoso (salseo)"]]],
-  ["Atmósfera", [["mysterious", "Misterioso y de suspense"], ["creepy", "Oscuro y escalofriante"], ["poetic", "Poético y lírico"], ["calm", "Relajado y reflexivo"]]],
-  ["Análisis", [["informative", "Informativo y analítico"], ["teacher", "Didáctico (como un profe)"], ["documentary", "Narrador de documental"], ["critic", "Crítico exigente"], ["controversial", "Polémico (sin desinformar)"]]],
-  ["Cercanía", [["conversational", "Cercano, como con un amigo"], ["gamer", "Gamer / streamer"]]],
+// TONO = CÓMO lo cuentas
+const toneGroups: [string, Opt[]][] = [
+  ["Cálidos y humanos", [
+    ["warm", "Cálido y humano", "Empático y sincero, habla de los personajes como de personas reales."],
+    ["conversational", "Cercano, como con un amigo", "Natural y coloquial, sin pose."],
+    ["cute", "Tierno", "Dulce, delicado y adorable."],
+    ["nostalgic", "Nostálgico", "Recuerdos y añoranza serena."],
+    ["hopeful", "Esperanzador", "Aunque duela, siempre deja una luz."],
+    ["romantic", "Romántico y soñador", "Sensible, con emoción contenida."],
+  ]],
+  ["Alegres y enérgicos", [
+    ["cheerful", "Alegre y positivo", "Optimista y luminoso, con sonrisa en la voz."],
+    ["euphoric", "Eufórico", "Emoción desbordada y ritmo explosivo."],
+    ["charismatic", "Carismático", "Seguro, magnético y con personalidad que atrapa."],
+    ["energetic", "Enérgico y viral", "Frases cortas y ritmo rápido."],
+    ["fan", "Fan apasionado", "Entusiasmo otaku genuino."],
+    ["epic", "Épico (voz de tráiler)", "Grandilocuente y en crescendo."],
+  ]],
+  ["Profundos y reflexivos", [
+    ["philosophical", "Filosófico", "Preguntas sobre identidad, libertad o sentido; deja pensando."],
+    ["calm", "Sereno y reflexivo", "Pausado, invita a pensar sin prisa."],
+    ["melancholic", "Melancólico", "Tristeza suave y contemplativa."],
+    ["emotional_deep", "Emotivo y profundo", "Va directo al corazón."],
+    ["poetic", "Poético y lírico", "Metáforas y ritmo casi musical."],
+    ["inspirational", "Inspirador y motivacional", "Impulsa a superarse."],
+  ]],
+  ["Fríos y serios", [
+    ["cold", "Frío y distante", "Analítico e impasible, frases secas, sin adornos."],
+    ["documentary", "Sobrio de documental", "Elegante, neutral y preciso."],
+    ["informative", "Objetivo y neutral", "Claro, sin opinión ni exageración."],
+    ["solemn", "Solemne", "Grave y pausado, con peso en cada palabra."],
+    ["critic", "Crítico exigente", "Opinión honesta y argumentada."],
+    ["teacher", "Didáctico", "Lo explica fácil, como un buen profesor."],
+  ]],
+  ["Intensos y oscuros", [
+    ["dramatic", "Dramático y cinematográfico", "Tensión, pausas y frases con peso."],
+    ["mysterious", "Misterioso y de suspense", "Dosifica la información y deja preguntas."],
+    ["creepy", "Oscuro e inquietante", "Atmósfera tensa y escalofriante."],
+    ["controversial", "Provocador y polémico", "Opiniones fuertes que invitan a debatir."],
+  ]],
+  ["Humor", [
+    ["humorous", "Humorístico", "Chistes y comparaciones graciosas."],
+    ["genz", "Memes y humor Gen Z", "Remates rápidos de redes."],
+    ["sarcastic", "Sarcástico e irónico", "Ironía fina."],
+    ["gossip", "Chismoso (salseo)", "Como contando un chisme."],
+  ]],
 ];
+const findOpt = (groups: [string, Opt[]][], key: string) => groups.flatMap(([, o]) => o).find(([k]) => k === key);
+const topCounts = [3, 5, 7, 10];
+const topSubjects = [["characters", "Personajes"], ["moments", "Momentos"], ["fights", "Peleas"], ["villains", "Villanos"], ["sad", "Escenas tristes"], ["couples", "Parejas"], ["powers", "Poderes"], ["openings", "Openings"], ["quotes", "Frases"]];
+// Tipos en los que tiene sentido elegir un personaje central
+const CHARACTER_TYPES = new Set(["analysis", "relationship", "villain", "life_lessons", "curiosities", "emotional", "top_moments", "theory", "versus", "comparison"]);
 const genders: [string, string, typeof RiWomenLine][] = [["female", "Femenina", RiWomenLine], ["male", "Masculina", RiMenLine], ["neutral", "Neutra", RiGenderlessLine]];
 const ages = [["young", "Joven", "18-24"], ["adult", "Adulta", "25-35"], ["mature", "Madura", "35+"]];
 const dialects = [["latam", "Latino neutro"], ["mexico", "México"], ["spain", "España"], ["argentina", "Argentina (voseo)"], ["colombia", "Colombia"], ["chile", "Chile"], ["peru", "Perú"]];
@@ -40,7 +116,11 @@ const narrativeStyles = [["narrator", "Narrador (tercera persona)"], ["first_per
 type Prefs = { tone: string; targetChars: number; gender: string; age: string; dialect: string; audience: string; style: string };
 const DEFAULT_PREFS: Prefs = { tone: "energetic", targetChars: 900, gender: "neutral", age: "adult", dialect: "latam", audience: "general", style: "narrator" };
 function loadPrefs(): Prefs {
-  try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem("generator-prefs") || "{}") }; } catch { return DEFAULT_PREFS; }
+  try {
+    const p: Prefs = { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem("generator-prefs") || "{}") };
+    // Tonos antiguos que ya no existen ("hype", "gamer"…) vuelven al predeterminado
+    return findOpt(toneGroups, p.tone) ? p : { ...p, tone: DEFAULT_PREFS.tone };
+  } catch { return DEFAULT_PREFS; }
 }
 const lengths = [300, 600, 900, 1200, 1500];
 const spoilerOptions = [["none", "Sin spoilers"], ["light", "Leves"], ["full", "Completos"]];
@@ -136,7 +216,7 @@ function Section({ n, title, action, children }: { n?: string; title: string; ac
 
 export default function Generator() {
   const location = useLocation();
-  const navState = location.state as { anime?: Anime; news?: NewsItem } | null;
+  const navState = location.state as { anime?: Anime; news?: NewsItem; extra?: string } | null;
   const [anime, setAnime] = useState<Anime | undefined>(navState?.anime);
   const [picking, setPicking] = useState(false);
   const [news, setNews] = useState<NewsItem | undefined>(navState?.news);
@@ -151,11 +231,15 @@ export default function Generator() {
   const setTone = (v: string) => setPref({ tone: v });
   const setTargetChars = (v: number) => setPref({ targetChars: v });
   const [spoilers, setSpoilers] = useState("none");
+  const [focusChar, setFocusChar] = useState("");
+  const [topCount, setTopCount] = useState(5);
+  const [topSubject, setTopSubject] = useState("characters");
 
   // Si llegan anime o noticia nuevos por navegación (desde Explorar o Noticias), los aplicamos
   useEffect(() => {
     if (navState?.anime) { setAnime(navState.anime); setPicking(false); }
     if (navState?.news) { setNews(navState.news); setType("news"); }
+    if (navState?.extra) setExtra(navState.extra.slice(0, 500));
   }, [location.key]);
   const [extra, setExtra] = useState("");
   const [response, setResponse] = useState<GenerateResponse | null>(null);
@@ -169,6 +253,7 @@ export default function Generator() {
 
   useEffect(() => {
     setTrends(null);
+    setFocusChar(""); // el personaje elegido pertenece al anime anterior
     if (!anime) return;
     let alive = true;
     getAnimeTrends(anime.id).then((t) => alive && setTrends(t)).catch(() => {});
@@ -184,6 +269,7 @@ export default function Generator() {
       const d = await generateScript({
         anime: { id: anime.id, title, description: anime.description || "", genres: anime.genres || [], characters: anime.characters?.edges.map((e) => e.node.name.full) || [] },
         contentType: type, targetChars, tone, spoilerLevel: spoilers, language: "es", extraInstructions: extra,
+        focusCharacter: CHARACTER_TYPES.has(type) ? focusChar : "", topCount, topSubject,
         narratorGender: prefs.gender, narratorAge: prefs.age, dialect: prefs.dialect, audience: prefs.audience, narrativeStyle: prefs.style,
         ...(news ? { newsContext: { title: news.title, summary: news.summary, source: news.source, date: news.date } } : {}),
       });
@@ -251,11 +337,56 @@ export default function Generator() {
               )}
             </Field>
 
-            <Field label="TIPO DE CONTENIDO">
+            <Field label="TIPO DE CONTENIDO" hint="qué cuentas">
               <select value={type} onChange={(e) => setType(e.target.value)} className={selectCls}>
                 {typeGroups.map(([g, opts]) => <optgroup label={g} key={g}>{opts.map(([v, l]) => <option value={v} key={v}>{l}</option>)}</optgroup>)}
               </select>
+              <p className="mt-1.5 text-xs leading-relaxed text-subtle">{findOpt(typeGroups, type)?.[2]}</p>
             </Field>
+
+            {type === "ranking" && (
+              <div className="grid gap-3 rounded-2xl border border-line bg-ink/40 p-3.5">
+                <Field label="¿CUÁNTOS PUESTOS?">
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {topCounts.map((n) => (
+                      <button key={n} onClick={() => setTopCount(n)} className={cn(
+                        "h-11 rounded-xl border text-sm font-semibold transition active:scale-95",
+                        topCount === n ? "border-violet bg-[#30234d] text-violet-soft" : "border-line-strong bg-ink/60 text-[#9da6b8]"
+                      )}>Top {n}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="TOP DE">
+                  <div className="flex flex-wrap gap-1.5">
+                    {topSubjects.map(([v, l]) => (
+                      <button key={v} onClick={() => setTopSubject(v)} className={cn(
+                        "h-9 rounded-full border px-3.5 text-sm transition active:scale-95",
+                        topSubject === v ? "border-violet bg-[#30234d] text-violet-soft" : "border-line-strong bg-ink/60 text-[#9da6b8]"
+                      )}>{l}</button>
+                    ))}
+                  </div>
+                </Field>
+              </div>
+            )}
+
+            {CHARACTER_TYPES.has(type) && !!anime?.characters?.edges.length && (
+              <Field label="PERSONAJE CENTRAL" hint="opcional">
+                <div className="no-scrollbar -mx-1 flex gap-2.5 overflow-x-auto px-1 pb-1">
+                  <button onClick={() => setFocusChar("")} className="flex w-16 shrink-0 flex-col items-center gap-1">
+                    <span className={cn("grid size-14 place-items-center rounded-full border-2 bg-panel text-[10px] font-bold", !focusChar ? "border-violet text-violet-soft" : "border-line-strong text-muted")}>{type === "analysis" ? "AUTO" : "TODOS"}</span>
+                    <span className="text-[10px] text-muted">{type === "analysis" ? "Que elija la IA" : "Ninguno"}</span>
+                  </button>
+                  {anime.characters.edges.map(({ node: c }) => (
+                    <button key={c.name.full} onClick={() => setFocusChar(c.name.full)} className="flex w-16 shrink-0 flex-col items-center gap-1">
+                      {c.image?.large
+                        ? <img src={c.image.large} alt="" loading="lazy" className={cn("size-14 rounded-full border-2 object-cover", focusChar === c.name.full ? "border-violet" : "border-line-strong")} />
+                        : <span className={cn("grid size-14 place-items-center rounded-full border-2 bg-panel text-lg font-bold", focusChar === c.name.full ? "border-violet text-violet-soft" : "border-line-strong text-muted")}>{c.name.full[0]}</span>}
+                      <span className={cn("line-clamp-2 text-center text-[10px] leading-tight", focusChar === c.name.full ? "text-violet-soft" : "text-muted")}>{c.name.full}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            )}
 
             <Field label="LONGITUD DE LA NARRACIÓN" hint="caracteres · voz aprox.">
               <div className="grid grid-cols-5 gap-1.5">
@@ -271,10 +402,11 @@ export default function Generator() {
               </div>
             </Field>
 
-            <Field label="TONO NARRATIVO">
+            <Field label="TONO" hint="cómo lo cuentas">
               <select value={tone} onChange={(e) => setTone(e.target.value)} className={selectCls}>
                 {toneGroups.map(([g, opts]) => <optgroup label={g} key={g}>{opts.map(([v, l]) => <option value={v} key={v}>{l}</option>)}</optgroup>)}
               </select>
+              <p className="mt-1.5 text-xs leading-relaxed text-subtle">{findOpt(toneGroups, tone)?.[2]}</p>
             </Field>
 
             {/* Voz y persona: quién habla y para quién */}

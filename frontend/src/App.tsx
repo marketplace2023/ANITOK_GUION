@@ -3,12 +3,13 @@ import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { motion } from "motion/react";
 import type { IconType } from "react-icons";
 import {
-  RiBookmark3Fill, RiBookmark3Line, RiCompass3Fill, RiCompass3Line, RiHome5Fill, RiHome5Line,
+  RiBookmark3Fill, RiBookmark3Line, RiCompass3Fill, RiCompass3Line, RiFilmFill, RiFilmLine, RiHome5Fill, RiHome5Line,
   RiMagicFill, RiMagicLine, RiMovie2Line, RiNewspaperFill, RiNewspaperLine, RiSettings4Fill, RiSettings4Line,
 } from "react-icons/ri";
 import { useAuth } from "./auth";
 import Login from "./pages/Login";
 import News from "./pages/News";
+import Scenes from "./pages/Scenes";
 import { cn } from "@/lib/utils";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Dashboard from "./pages/Dashboard";
@@ -22,9 +23,11 @@ const nav: NavItem[] = [
   { to: "/", label: "Inicio", short: "Inicio", icon: RiHome5Line, activeIcon: RiHome5Fill },
   { to: "/catalog", label: "Explorar anime", short: "Explorar", icon: RiCompass3Line, activeIcon: RiCompass3Fill },
   { to: "/generator", label: "Generador IA", short: "Crear", icon: RiMagicLine, activeIcon: RiMagicFill },
+  { to: "/scenes", label: "Escenas", short: "Escenas", icon: RiFilmLine, activeIcon: RiFilmFill },
   { to: "/news", label: "Noticias", short: "Noticias", icon: RiNewspaperLine, activeIcon: RiNewspaperFill },
   { to: "/library", label: "Mis guiones", short: "Guiones", icon: RiBookmark3Line, activeIcon: RiBookmark3Fill, mobile: false },
-  { to: "/settings", label: "Configuración", short: "Ajustes", icon: RiSettings4Line, activeIcon: RiSettings4Fill },
+  // En móvil, Ajustes va en el botón de engranaje de la barra superior
+  { to: "/settings", label: "Configuración", short: "Ajustes", icon: RiSettings4Line, activeIcon: RiSettings4Fill, mobile: false },
 ];
 
 function Brand({ compact = false }: { compact?: boolean }) {
@@ -94,9 +97,9 @@ function Shell() {
         <header className="pt-safe sticky top-0 z-20 border-b border-line/70 bg-ink/80 backdrop-blur-xl lg:hidden">
           <div className="flex h-14 items-center justify-between px-4">
             <Brand compact />
-            <span className="flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-[11px] font-medium text-muted">
-              <span className="size-2 rounded-full bg-mint shadow-[0_0_10px_#34d399]" /> En línea
-            </span>
+            <NavLink to="/settings" aria-label="Configuración" className={({ isActive }) => cn("grid size-10 place-items-center rounded-xl border transition active:scale-95", isActive ? "border-violet/40 bg-violet-deep text-violet-soft" : "border-line bg-panel text-muted")}>
+              <RiSettings4Line className="size-5" />
+            </NavLink>
           </div>
         </header>
 
@@ -106,6 +109,7 @@ function Shell() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/generator" element={<Generator />} />
+            <Route path="/scenes" element={<Scenes />} />
             <Route path="/news" element={<News />} />
             <Route path="/library" element={<Library />} />
             <Route path="/settings" element={<Settings />} />

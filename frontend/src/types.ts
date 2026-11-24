@@ -3,7 +3,7 @@ export type Anime = {
   description?: string; coverImage?: { extraLarge?: string; large?: string };
   bannerImage?: string; genres?: string[]; averageScore?: number; popularity?: number;
   episodes?: number; seasonYear?: number; format?: string; status?: string;
-  characters?: { edges: { node: { name: { full: string } } }[] };
+  characters?: { edges: { node: { name: { full: string }; image?: { large?: string } } }[] };
 };
 export type GeneratedScript = {
   title: string; hook: string; narration: string;
@@ -33,4 +33,12 @@ export type BrowseFilters = {
   format?: "TV" | "TV_SHORT" | "MOVIE" | "OVA" | "ONA" | "SPECIAL";
   status?: "RELEASING" | "FINISHED" | "NOT_YET_RELEASED";
   sort?: "TRENDING_DESC" | "POPULARITY_DESC" | "SCORE_DESC" | "START_DATE_DESC" | "SEARCH_MATCH";
+};
+export type SakugaClip = { id: number; video: string; preview: string; sizeMB: number; vertical: boolean; tags: string[]; source: string };
+export type EpisodeThumb = { title: string; thumbnail: string; url: string; site: string };
+export type SceneVideo = { id: string; title: string; channel: string; date: string; thumbnail: string | null; duration: number | null };
+export type VideoProvider = "youtube" | "dailymotion";
+export type TraceResult = {
+  anilist: { id: number; title: { romaji?: string; english?: string | null; native?: string }; isAdult: boolean };
+  episode: number | string | null; from: number; to: number; similarity: number; video: string; image: string;
 };

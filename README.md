@@ -47,12 +47,18 @@ Las funciones de Netlify cortan a los 60 s: por eso la cadena de modelos tiene u
 ## Login
 La app es privada para un solo usuario: toda la API (salvo `/api/health` y `/api/auth/*`) exige sesión. La contraseña se guarda como hash scrypt, la sesión es una cookie HttpOnly firmada (30 días) y el login admite 10 intentos fallidos cada 15 minutos por IP. Si falta la configuración, la API queda cerrada.
 
+## Buscador de escenas
+Pestaña **Escenas**: clips de Sakugabooru por anime y tipo de escena (peleas, efectos, llanto…), miniaturas reales de cada episodio con el minuto exacto y clip vía [trace.moe](https://trace.moe), escenas de personajes en Dailymotion (API pública, sin clave ni tarjeta) e identificación de capturas. Dailymotion solo deja incrustar vídeos con un reproductor propio: sin `DAILYMOTION_PLAYER_ID` (cuenta gratuita de Dailymotion Studio) cada clip se abre en Dailymotion. Con `YOUTUBE_API_KEY` se usa YouTube y, si falla o agota la cuota, Dailymotion. trace.moe se llama desde el navegador (100 búsquedas gratis al mes por IP).
+
 ## Endpoints
 - `GET /api/health`
 - `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me`
 - `GET /api/news?lang=es|en|all&q=` (Crunchyroll Noticias, Ramen Para Dos, Anime News Network, MyAnimeList)
 - `GET /api/anime/genres`
 - `GET /api/anime/:id/news`
+- `GET /api/scenes/sakuga?animeId=&type=&page=` (clips de Sakugabooru por anime y tipo de escena)
+- `GET /api/scenes/episodes?animeId=` (miniaturas de episodios y tráiler, de AniList)
+- `GET /api/scenes/videos?anime=&character=` (clips de un personaje: Dailymotion, o YouTube si hay `YOUTUBE_API_KEY`)
 - `GET /api/anime/search?q=&genre=&year=&season=&format=&status=&sort=&page=` (el texto es opcional)
 - `GET /api/anime/trending`
 - `GET /api/anime/:id`
@@ -60,7 +66,7 @@ La app es privada para un solo usuario: toda la API (salvo `/api/health` y `/api
 - `POST /api/scripts/generate`
 
 ## Estado del proyecto
-Incluye navegación móvil con barra de pestañas, inicio con animes en tendencia, búsqueda en AniList, ficha de anime, panel de tendencias, generación con 19 tipos de contenido, 25 tonos, voz del narrador (género, edad, variante del español, público y estilo de narración), longitud por caracteres (300–1500), noticias de anime y login privado, además de validación y protecciones HTTP básicas. La biblioteca persistente y el login todavía no están conectados: el esquema Prisma es la base para implementarlos.
+Incluye navegación móvil con barra de pestañas, inicio con animes en tendencia, búsqueda en AniList, ficha de anime, panel de tendencias, generación con 23 tipos de contenido (qué cuentas: análisis de la serie o de un personaje, Top 3/5/7/10 de personajes, villanos, peleas…, curiosidades y anécdotas, etc.) y 32 tonos independientes (cómo lo cuentas: cálido, filosófico, frío, eufórico, carismático, alegre…), personaje central opcional, voz del narrador (género, edad, variante del español, público y estilo de narración), longitud por caracteres (300–1500), noticias de anime y login privado, además de validación y protecciones HTTP básicas. La biblioteca persistente y el login todavía no están conectados: el esquema Prisma es la base para implementarlos.
 
 TikTok no ofrece una API pública gratuita de tendencias: las señales de tendencia vienen de AniList y el panel enlaza al TikTok Creative Center para revisar hashtags manualmente.
 
