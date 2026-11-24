@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import type { IconType } from "react-icons";
 import { Link } from "react-router-dom";
 import {
-  RiArrowRightSLine, RiBookmark3Line, RiBrainLine, RiDatabase2Line, RiExternalLinkLine, RiLogoutBoxRLine, RiNewspaperLine,
-  RiRobot2Line, RiShieldCheckLine, RiSmartphoneLine,
+  RiArrowDownSLine, RiArrowRightSLine, RiArrowUpSLine, RiBookmark3Line, RiBrainLine, RiDatabase2Line, RiExternalLinkLine,
+  RiLogoutBoxRLine, RiNewspaperLine, RiShieldCheckLine, RiSmartphoneLine,
 } from "react-icons/ri";
 import { getHealth } from "../api";
+import { loadAiOrder, PROVIDER_IDS, PROVIDER_LABELS, saveAiOrder } from "../aiOrder";
+import type { AiProviderInfo, ProviderId } from "../types";
 import { useAuth } from "../auth";
 import PageHeader from "../components/PageHeader";
 import { BlurFade } from "@/components/ui/blur-fade";
@@ -37,13 +39,74 @@ function Card({ icon: Icon, title, text, state, stateText, link }: {
   );
 }
 
+const PROVIDER_META: Record<ProviderId, { text: string; env: string; link: { href: string; label: string } }> = {
+  gemini: { text: "La mejor calidad, pero a veces se satura.", env: "GEMINI_API_KEY", link: { href: "https://aistudio.google.com/", label: "AI Studio" } },
+  nemotron: { text: "Muy rápido (~10 s).", env: "NVIDIA_API_KEY", link: { href: "https://build.nvidia.com", label: "NVIDIA Build" } },
+  gemma: { text: "Buena calidad, pero lento (20-30 s).", env: "NVIDIA_GEMMA_API_KEY", link: { href: "https://build.nvidia.com", label: "NVIDIA Build" } },
+  openrouter: { text: "Modelos gratuitos variados, último recurso.", env: "OPENROUTER_API_KEY", link: { href: "https://openrouter.ai/keys", label: "OpenRouter" } },
+};
+
+// Orden de prioridad de los servicios de IA: el primero que responda escribe el guion
+function AiPriority({ ai, offline }: { ai: { order: ProviderId[]; providers: AiProviderInfo[] } | null; offline: boolean }) {
+  const [custom, setCustom] = useState<ProviderId[] | null>(loadAiOrder);
+  const order = custom ?? ai?.order ?? PROVIDER_IDS;
+  const byId = new Map(ai?.providers.map((p) => [p.id, p]));
+  const move = (i: number, d: -1 | 1) => {
+    const next = [...order];
+    [next[i], next[i + d]] = [next[i + d], next[i]];
+    setCustom(next); saveAiOrder(next);
+  };
+  const reset = () => { setCustom(null); saveAiOrder(null); };
+  const firstActive = order.find((id) => byId.get(id)?.configured && !byId.get(id)?.pausedUntil);
+
+  return (
+    <section className="grid gap-3 rounded-2xl border border-line bg-panel p-4">
+      <div className="flex items-start gap-3">
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-violet-deep text-violet-soft"><RiBrainLine className="size-5" /></span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold">Prioridad de IA</h3>
+          <p className="mt-1 text-sm text-muted">Se prueban en este orden. Si uno está saturado o tarda más de 25 s, pasa al siguiente y queda en pausa 3 minutos.</p>
+        </div>
+      </div>
+      {offline ? <p className="text-sm text-[#ffcf8a]">Backend sin conexión.</p> : !ai ? <div className="h-40 animate-pulse rounded-xl bg-ink/50" /> : (
+        <ol className="grid gap-2">
+          {order.map((id, i) => {
+            const p = byId.get(id);
+            const meta = PROVIDER_META[id];
+            const paused = p?.pausedUntil ? Math.max(1, Math.ceil((p.pausedUntil - Date.now()) / 60000)) : 0;
+            return (
+              <li key={id} className={cn("flex items-center gap-3 rounded-xl border p-2.5", id === firstActive ? "border-violet/60 bg-violet-deep/40" : "border-line-strong bg-ink/50", !p?.configured && "opacity-60")}>
+                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-panel-2 font-display text-sm font-bold text-violet-soft">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <b className="block truncate text-sm">{PROVIDER_LABELS[id]}</b>
+                  <small className="block truncate text-xs text-muted">{meta.text}</small>
+                  <span className={cn("mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium", !p?.configured ? "text-subtle" : paused ? "text-[#ffcf8a]" : "text-[#8ce5bf]")}>
+                    <i className={cn("size-1.5 rounded-full", !p?.configured ? "bg-subtle" : paused ? "bg-amber" : "bg-mint")} />
+                    {!p?.configured ? `Sin clave (${meta.env})` : paused ? `Saturado · en pausa ${paused} min` : id === firstActive ? "Activo · se usa primero" : "Listo"}
+                  </span>
+                </div>
+                <div className="flex shrink-0 flex-col gap-1">
+                  <button onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Subir ${PROVIDER_LABELS[id]}`} className="grid size-8 place-items-center rounded-lg border border-line-strong text-[#c6cbd8] active:bg-panel-2 disabled:opacity-30"><RiArrowUpSLine className="size-5" /></button>
+                  <button onClick={() => move(i, 1)} disabled={i === order.length - 1} aria-label={`Bajar ${PROVIDER_LABELS[id]}`} className="grid size-8 place-items-center rounded-lg border border-line-strong text-[#c6cbd8] active:bg-panel-2 disabled:opacity-30"><RiArrowDownSLine className="size-5" /></button>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+      <div className="flex items-center justify-between gap-2 text-xs text-subtle">
+        <span>{custom ? "Orden personalizado en este dispositivo" : "Orden predeterminado del servidor"}</span>
+        {custom && <button onClick={reset} className="font-medium text-violet-soft">Restablecer</button>}
+      </div>
+    </section>
+  );
+}
+
 export default function Settings() {
   const { state, logout } = useAuth();
-  const [providers, setProviders] = useState<{ gemini: boolean; nvidia: boolean; openrouter: boolean } | null>(null);
+  const [ai, setAi] = useState<{ order: ProviderId[]; providers: AiProviderInfo[] } | null>(null);
   const [offline, setOffline] = useState(false);
-  useEffect(() => { getHealth().then((h) => setProviders(h.providers ?? null)).catch(() => setOffline(true)); }, []);
-  const st = (on?: boolean): State => (offline ? "pending" : providers ? (on ? "ok" : "pending") : "loading");
-  const label = (on: boolean | undefined, env: string) => (offline ? "Backend sin conexión" : !providers ? "Comprobando…" : on ? "Clave configurada" : `Falta ${env} en backend/.env`);
+  useEffect(() => { getHealth().then((h) => setAi(h.ai ?? null)).catch(() => setOffline(true)); }, []);
   const user = state.status === "authenticated" ? state.user : "";
 
   return (
@@ -71,11 +134,10 @@ export default function Settings() {
         </Link>
       </BlurFade>
 
+      <BlurFade delay={0.05}><AiPriority ai={ai} offline={offline} /></BlurFade>
+
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {[
-          <Card key="g" icon={RiBrainLine} title="Google Gemini" text="Proveedor principal para generar guiones." state={st(providers?.gemini)} stateText={label(providers?.gemini, "GEMINI_API_KEY")} link={{ href: "https://aistudio.google.com/", label: "Abrir AI Studio" }} />,
-          <Card key="nv" icon={RiRobot2Line} title="NVIDIA Build" text="Respaldo con Nemotron y Gemma 4, según las claves configuradas." state={st(providers?.nvidia)} stateText={label(providers?.nvidia, "NVIDIA_API_KEY o NVIDIA_GEMMA_API_KEY")} link={{ href: "https://build.nvidia.com", label: "Abrir NVIDIA Build" }} />,
-          <Card key="o" icon={RiRobot2Line} title="OpenRouter" text="Respaldo con modelos gratuitos si fallan Gemini y NVIDIA." state={st(providers?.openrouter)} stateText={label(providers?.openrouter, "OPENROUTER_API_KEY")} link={{ href: "https://openrouter.ai/keys", label: "Gestionar claves" }} />,
           <Card key="a" icon={RiDatabase2Line} title="AniList GraphQL" text="Catálogo, fichas y datos de tendencia." state="ok" stateText="API pública, sin clave" link={{ href: "https://docs.anilist.co/", label: "Documentación" }} />,
           <Card key="n" icon={RiNewspaperLine} title="Noticias" text="Crunchyroll Noticias y Ramen Para Dos (español), Anime News Network y MyAnimeList (inglés)." state="ok" stateText="RSS públicos, sin clave" />,
           <Card key="s" icon={RiShieldCheckLine} title="Seguridad" text="Login privado con contraseña cifrada (scrypt), sesión en cookie segura, límite de intentos, Helmet y validación Zod." state="ok" stateText="Protecciones activas" />,

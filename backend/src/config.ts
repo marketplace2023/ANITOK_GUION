@@ -10,6 +10,12 @@ const schema = z.object({
   GEMINI_FALLBACK_MODELS: z.string().default("gemini-3.6-flash,gemini-3.1-flash-lite"),
   GEMINI_TIMEOUT_MS: z.coerce.number().default(30000),
   AI_TOTAL_TIMEOUT_MS: z.coerce.number().default(50000),
+  // Orden de prioridad por defecto (la app puede cambiarlo en Ajustes): gemini, nemotron, gemma, openrouter
+  AI_PROVIDER_ORDER: z.string().default("gemini,nemotron,gemma,openrouter"),
+  // Tiempo máximo por servicio (sumando sus modelos) antes de pasar al siguiente
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().default(25000),
+  // Pausa de un servicio saturado o que no responde (pasa al final de la cola)
+  AI_COOLDOWN_MS: z.coerce.number().default(180000),
   NVIDIA_API_KEY: z.string().optional().transform((v) => v || undefined),
   NVIDIA_MODEL: z.string().default("nvidia/nemotron-3.5-bolt-e4b"),
   NVIDIA_GEMMA_API_KEY: z.string().optional().transform((v) => v || undefined),

@@ -1,4 +1,4 @@
-import type { Anime, AnimeTrends, BrowseFilters, EpisodeThumb, GenerateResponse, NewsItem, SakugaClip, SceneVideo, TraceResult, VideoProvider } from "./types";
+import type { AiProviderInfo, Anime, AnimeTrends, BrowseFilters, EpisodeThumb, GenerateResponse, NewsItem, SakugaClip, ProviderId, SceneVideo, TraceResult, VideoProvider } from "./types";
 
 // La API siempre está en /api del mismo dominio: en Netlify por la función y en local por el proxy de Vite.
 const API = import.meta.env.VITE_API_URL || "/api";
@@ -47,7 +47,7 @@ export const getNews = (lang: "es" | "en" | "all" = "all", q?: string, limit?: n
 
 // Generación y estado
 export const generateScript = (payload: unknown) => request<GenerateResponse>("/scripts/generate", { method: "POST", body: JSON.stringify(payload) });
-export const getHealth = () => request<{ status: string; auth: string; providers?: { gemini: boolean; nvidia: boolean; openrouter: boolean } }>("/health");
+export const getHealth = () => request<{ status: string; auth: string; ai?: { order: ProviderId[]; providers: AiProviderInfo[] } }>("/health");
 
 // Escenas
 export const getSakugaClips = (animeId: number, type?: string, page = 1) =>

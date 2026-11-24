@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { generateJson, providerStatus } from "../ai.js";
+import { generateJson, PROVIDER_IDS, providerStatus } from "../ai.js";
 import { getAnimeTrends, trendsToPrompt } from "../trends.js";
 import { getAnimeTitles } from "../anilist.js";
 import { filterByTitles, getNews } from "../news.js";
@@ -145,6 +145,8 @@ const inputSchema = z.object({
   dialect: z.enum(keys(DIALECTS)).default("latam"),
   audience: z.enum(keys(AUDIENCES)).default("general"),
   narrativeStyle: z.enum(keys(NARRATIVE_STYLES)).default("narrator"),
+  // Orden de prioridad de los servicios de IA elegido en Ajustes (opcional)
+  providerOrder: z.array(z.enum(PROVIDER_IDS)).max(PROVIDER_IDS.length).optional(),
   spoilerLevel: z.enum(["none", "light", "full"]),
   language: z.enum(["es", "en"]).default("es"),
   extraInstructions: z.string().max(500).optional().default(""),
@@ -223,7 +225,7 @@ SEO:
 No inventes datos específicos, episodios, citas ni declaraciones. Si la información no está en el contexto, formula la idea como opinión o pregunta, no como hecho. No reproduzcas diálogos protegidos. Crea un gancho potente en los primeros 2 segundos, narración oral natural, ritmo ágil, indicaciones visuales genéricas sin pedir clips protegidos y CTA final.
 Instrucciones adicionales: ${d.extraInstructions || "Ninguna"}`;
 
-    const { data, provider, model } = await generateJson(prompt);
+    const { data, provider, model } = await generateJson(prompt, d.providerOrder);
     const script = data as { narration?: string };
     const stats = { narrationChars: script.narration?.length ?? 0, targetChars: d.targetChars };
     res.json({ script, provider, model, stats, trends, newsUsed: d.newsContext ? 1 : relatedNews?.length ?? 0 });

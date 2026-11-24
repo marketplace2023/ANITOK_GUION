@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { config } from "./config.js";
-import { providerStatus } from "./ai.js";
+import { providerInfo, providerStatus } from "./ai.js";
 import { authConfigured, authRouter, requireAuth, sessionUser } from "./auth.js";
 import animeRouter from "./routes/anime.js";
 import scriptsRouter from "./routes/scripts.js";
@@ -28,7 +28,7 @@ api.use(rateLimit({ windowMs: 60_000, limit: 90, standardHeaders: "draft-7", leg
 // Públicas: estado y login. Los detalles de proveedores solo con sesión iniciada.
 api.get("/health", (req, res) => res.json({
   status: "ok", service: "animetok-api", auth: authConfigured() ? "configured" : "missing",
-  ...(sessionUser(req) ? { providers: providerStatus() } : {}),
+  ...(sessionUser(req) ? { providers: providerStatus(), ai: providerInfo() } : {}),
 }));
 api.use("/auth", authRouter);
 

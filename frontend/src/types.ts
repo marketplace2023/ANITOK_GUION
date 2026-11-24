@@ -19,7 +19,7 @@ export type AnimeTrends = {
   momentum: "explosivo" | "en alza" | "estable" | "en baja";
 };
 export type GenerateResponse = {
-  script: GeneratedScript; model: string; provider: "gemini" | "nvidia" | "openrouter";
+  script: GeneratedScript; model: string; provider: ProviderId;
   stats: { narrationChars: number; targetChars: number };
   trends: AnimeTrends | null;
   newsUsed?: number;
@@ -42,3 +42,6 @@ export type TraceResult = {
   anilist: { id: number; title: { romaji?: string; english?: string | null; native?: string }; isAdult: boolean };
   episode: number | string | null; from: number; to: number; similarity: number; video: string; image: string;
 };
+
+export type ProviderId = "gemini" | "nemotron" | "gemma" | "openrouter";
+export type AiProviderInfo = { id: ProviderId; label: string; configured: boolean; models: string[]; pausedUntil: number | null; lastError: string | null; lastMs: number | null };

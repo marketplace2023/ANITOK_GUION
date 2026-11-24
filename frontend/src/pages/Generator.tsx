@@ -6,6 +6,7 @@ import {
   RiSearchLine, RiShareForwardLine, RiSparkling2Fill, RiUserVoiceLine, RiWomenLine,
 } from "react-icons/ri";
 import { generateScript, getAnimeTrends } from "../api";
+import { loadAiOrder, PROVIDER_LABELS } from "../aiOrder";
 import type { Anime, AnimeTrends, GenerateResponse, NewsItem } from "../types";
 import PageHeader from "../components/PageHeader";
 import AnimePicker from "../components/AnimePicker";
@@ -270,6 +271,7 @@ export default function Generator() {
         anime: { id: anime.id, title, description: anime.description || "", genres: anime.genres || [], characters: anime.characters?.edges.map((e) => e.node.name.full) || [] },
         contentType: type, targetChars, tone, spoilerLevel: spoilers, language: "es", extraInstructions: extra,
         focusCharacter: CHARACTER_TYPES.has(type) ? focusChar : "", topCount, topSubject,
+        ...(loadAiOrder() ? { providerOrder: loadAiOrder() } : {}),
         narratorGender: prefs.gender, narratorAge: prefs.age, dialect: prefs.dialect, audience: prefs.audience, narrativeStyle: prefs.style,
         ...(news ? { newsContext: { title: news.title, summary: news.summary, source: news.source, date: news.date } } : {}),
       });
@@ -513,7 +515,7 @@ export default function Generator() {
             ) : result && response ? (
               <div className="mt-3">
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-violet-deep px-2 py-1 text-[10px] font-bold tracking-wider text-violet-soft">
-                  <RiSparkling2Fill /> {response.provider.toUpperCase()} · {response.model}
+                  <RiSparkling2Fill /> {(PROVIDER_LABELS[response.provider] ?? response.provider).toUpperCase()} · {response.model}
                 </span>
                 <h3 className="mt-3 font-display text-xl font-semibold leading-snug">{result.title}</h3>
 

@@ -17,7 +17,7 @@ Aplicación web (pensada primero para móvil e instalable como PWA) para explora
 
 ## Inicio rápido
 1. Copia `backend/.env.example` a `backend/.env`.
-2. Configura al menos una clave: `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `NVIDIA_GEMMA_API_KEY` u `OPENROUTER_API_KEY`. La cadena prueba Gemini → NVIDIA Nemotron → NVIDIA Gemma → OpenRouter, omitiendo proveedores sin clave.
+2. Configura al menos una clave: `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `NVIDIA_GEMMA_API_KEY` u `OPENROUTER_API_KEY`. Por defecto se prueba Gemini → NVIDIA Nemotron → NVIDIA Gemma → OpenRouter, omitiendo proveedores sin clave; el orden se cambia en **Ajustes → Prioridad de IA**.
 3. Crea tu usuario y contraseña: `npm run set-password -w backend` (guarda solo el hash en `backend/.env`).
 4. Ejecuta `npm install`.
 5. Ejecuta `npm run dev`.
@@ -41,6 +41,9 @@ Las funciones de Netlify cortan a los 60 s: por eso la cadena de modelos tiene u
 - `NVIDIA_GEMMA_MODEL`: modelo de Gemma en NVIDIA Build (por defecto `google/gemma-4-31b-it`). Usa su propia clave `NVIDIA_GEMMA_API_KEY` y se prueba después de Nemotron, incluso si es el único proveedor configurado.
 - `OPENROUTER_MODELS`: modelos de OpenRouter que se prueban si fallan Gemini y NVIDIA.
 - `AI_TOTAL_TIMEOUT_MS`: presupuesto compartido de toda la cadena; si se agota, no se prueban los modelos restantes.
+- `AI_PROVIDER_ORDER`: orden de prioridad por defecto (`gemini,nemotron,gemma,openrouter`). Desde **Ajustes → Prioridad de IA** se puede reordenar por dispositivo; los servicios no listados se añaden al final como respaldo.
+- `AI_PROVIDER_TIMEOUT_MS` (25 s): tiempo máximo por servicio, sumando sus modelos, antes de pasar al siguiente.
+- `AI_COOLDOWN_MS` (3 min): si un servicio está saturado (429/503) o no responde, queda en pausa y pasa al final de la cola. Ajustes muestra qué servicios están en pausa.
 - `GEMINI_TIMEOUT_MS`: tiempo máximo por intento antes de pasar al siguiente modelo.
 - `CLIENT_ORIGIN`: origen exacto del frontend en producción.
 
